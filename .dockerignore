@@ -1,0 +1,21 @@
+# Dependencias e builds locais
+**/node_modules/
+**/dist/
+**/target/
+**/.vite/
+
+# IDE
+**/.idea/
+**/.vscode/
+**/*.iml
+
+# Git
+.git/
+.gitignore
+
+# Prototipo (nao faz parte da app)
+claude_design_project/
+
+# Ficheiros temporarios
+**/*.timestamp-*
+**/*.log
