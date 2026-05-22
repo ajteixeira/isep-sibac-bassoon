@@ -1,0 +1,33 @@
+# Maven build output
+/target/
+**/target/
+
+# IntelliJ IDEA
+/.idea/
+*.iml
+
+# VS Code
+/.vscode/
+
+# Java
+*.class
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Maven local repo
+/.m2/
+
+# Logs
+*.log
+
+# Node
+/node_modules/
+
+# Environment files
+.env
+
+# Other
+*.tmp
+
