@@ -1,3 +1,4 @@
+/** Landing screen with a brief explanation and a start button. */
 export default function StepIntro({ onStart }) {
   return (
     <div className="step step-intro">

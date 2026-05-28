@@ -1,7 +1,8 @@
-import { EPOCAS } from '../data'
+import { EPOCAS } from '../labels'
 import RadioRow from '../components/RadioRow'
 import FooterNav from '../components/FooterNav'
 
+/** Step 5 — last studied era (optional, used to avoid repetition). */
 export default function StepPeriodo({ state, set, onSubmit, onBack }) {
   return (
     <div className="step">
@@ -50,7 +51,7 @@ export default function StepPeriodo({ state, set, onSubmit, onBack }) {
       <FooterNav
         onBack={onBack}
         onNext={onSubmit}
-        nextLabel="&#8627; recomendar repertorio"
+        nextLabel="recomendar repertorio"
         nextEmphatic
         meta="passo v de vi - periodo"
       />

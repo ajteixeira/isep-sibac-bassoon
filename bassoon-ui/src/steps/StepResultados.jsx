@@ -1,17 +1,19 @@
 import { useState } from 'react'
-import { EPOCAS, ACOMP_LABELS } from '../data'
+import { EPOCAS, ACOMPANHAMENTOS } from '../labels'
 import FooterNav from '../components/FooterNav'
 
-
-// ---------------------------------------------------------------------------
-// YouTube embed
-// ---------------------------------------------------------------------------
-
-function YouTubeEmbed({ videoId, title }) {
+function YouTubeEmbed({ videoLink, title }) {
+  if (!videoLink) {
+    return (
+      <div className="yt-empty">
+        <span>sem gravacao de referencia</span>
+      </div>
+    )
+  }
   return (
     <div className="yt-embed">
       <iframe
-        src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
+        src={`https://www.youtube-nocookie.com/embed/${videoLink}?rel=0&modestbranding=1`}
         title={`Gravacao de referencia - ${title}`}
         loading="lazy"
         allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -21,16 +23,12 @@ function YouTubeEmbed({ videoId, title }) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Card de uma recomendacao (vista single)
-// ---------------------------------------------------------------------------
-
 function RecommendCard({ work, idx, total }) {
   const epocaLabel =
-    EPOCAS.find((e) => e.id === work.epoca)?.label || work.epoca
+    EPOCAS.find((e) => e.id === work.era)?.label || work.era
   const acomp =
-    ACOMP_LABELS[work.acompanhamento] ||
-    work.acompanhamento?.toLowerCase()
+    ACOMPANHAMENTOS.find((a) => a.id === work.accompaniment)?.label ||
+    work.accompaniment?.toLowerCase()
 
   return (
     <article className="rec-card">
@@ -39,22 +37,22 @@ function RecommendCard({ work, idx, total }) {
           obra <strong>{String(idx + 1).padStart(2, '0')}</strong>
           <span className="of"> / {String(total).padStart(2, '0')}</span>
         </span>
-        <span className="rch-rule">R5 - ordenada por score</span>
+        <span className="rch-rule">ordered by score</span>
       </header>
 
       <div className="rec-card-body">
-        <h3 className="rec-title">{work.nomeObra}</h3>
-        <div className="rec-composer">{work.compositor}</div>
+        <h3 className="rec-title">{work.workName}</h3>
+        <div className="rec-composer">{work.composer}</div>
 
         <div className="rec-meta">
           <div>
             <span className="m-key">per</span>
             {epocaLabel}
           </div>
-          {work.pais && (
+          {work.country && (
             <div>
               <span className="m-key">pais</span>
-              {work.pais}
+              {work.country}
             </div>
           )}
           {acomp && (
@@ -65,49 +63,39 @@ function RecommendCard({ work, idx, total }) {
           )}
         </div>
 
-        {work.preRequisito && (
+        {work.prerequisite && (
           <div className="work-prereq">
-            pre-req - <strong>{work.preRequisito}</strong>
+            pre-req - <strong>{work.prerequisite}</strong>
           </div>
         )}
       </div>
 
-      {work.youtubeId ? (
-        <YouTubeEmbed videoId={work.youtubeId} title={work.nomeObra} />
-      ) : (
-        <div className="yt-empty">
-          <span>sem gravacao de referencia</span>
-        </div>
-      )}
+      <YouTubeEmbed videoLink={work.videoLink} title={work.workName} />
     </article>
   )
 }
-
-// ---------------------------------------------------------------------------
-// Lista compacta (todas as recomendacoes)
-// ---------------------------------------------------------------------------
 
 function RecommendList({ recs, currentIdx, onPick }) {
   return (
     <ol className="rec-list">
       {recs.map((w, i) => {
         const epocaLabel =
-          EPOCAS.find((e) => e.id === w.epoca)?.label || w.epoca
+          EPOCAS.find((e) => e.id === w.era)?.label || w.era
         const isCurrent = i === currentIdx
         return (
           <li
-            key={w.nomeObra}
+            key={w.workName}
             className={`rec-list-row ${isCurrent ? 'current' : ''}`}
           >
             <button
               type="button"
               className="rl-thumb"
               onClick={() => onPick(i)}
-              aria-label={`Ver ${w.nomeObra}`}
+              aria-label={`View ${w.workName}`}
             >
-              {w.youtubeId && (
+              {w.videoLink && (
                 <img
-                  src={`https://i.ytimg.com/vi/${w.youtubeId}/mqdefault.jpg`}
+                  src={`https://i.ytimg.com/vi/${w.videoLink}/mqdefault.jpg`}
                   alt=""
                   onError={(e) => {
                     e.currentTarget.style.display = 'none'
@@ -115,7 +103,6 @@ function RecommendList({ recs, currentIdx, onPick }) {
                 />
               )}
               <span className="rl-play" aria-hidden="true">
-                &#9654;
               </span>
             </button>
 
@@ -125,34 +112,23 @@ function RecommendList({ recs, currentIdx, onPick }) {
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className="rl-score">score {w.score.toFixed(2)}</span>
-                {isCurrent && (
-                  <span className="rl-pill current-pill">a estudar</span>
-                )}
               </div>
-              <div className="rl-title">{w.nomeObra}</div>
-              <div className="rl-composer">{w.compositor}</div>
+              <div className="rl-title">{w.workName}</div>
+              <div className="rl-composer">{w.composer}</div>
               <div className="rl-meta">
                 <span>{epocaLabel}</span>
-                {w.pais && <span>- {w.pais}</span>}
-                {w.acompanhamento && (
+                {w.country && <span>- {w.country}</span>}
+                {w.accompaniment && (
                   <span>
                     -{' '}
-                    {ACOMP_LABELS[w.acompanhamento] ||
-                      w.acompanhamento.toLowerCase()}
+                    {ACOMPANHAMENTOS.find((a) => a.id === w.accompaniment)?.label ||
+                      w.accompaniment.toLowerCase()}
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="rl-action">
-              <button
-                type="button"
-                className="btn-link"
-                onClick={() => onPick(i)}
-              >
-                {isCurrent ? 'atual' : 'ver →'}
-              </button>
-            </div>
+
           </li>
         )
       })}
@@ -160,10 +136,10 @@ function RecommendList({ recs, currentIdx, onPick }) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Passo V - Resultados
-// ---------------------------------------------------------------------------
-
+/**
+ * Step 6 — results screen. Shows a ranked list of recommended works
+ * and their LLM-generated justifications.
+ */
 export default function StepResultados({
   results,
   loading,
@@ -175,7 +151,6 @@ export default function StepResultados({
   const [currentIdx, setCurrentIdx] = useState(0)
   const [viewMode, setViewMode] = useState('single')
 
-  // --- Loading ---
   if (loading) {
     return (
       <div className="step">
@@ -197,7 +172,6 @@ export default function StepResultados({
     )
   }
 
-  // --- Error ---
   if (error) {
     return (
       <div className="step">
@@ -213,14 +187,13 @@ export default function StepResultados({
         <FooterNav
           onBack={onBack}
           onNext={onRestart}
-          nextLabel="&#8635; recomecar"
+          nextLabel="recomecar"
           meta="passo v de v - recomendacao"
         />
       </div>
     )
   }
 
-  // --- Waiting ---
   if (!results) {
     return (
       <div className="step">
@@ -232,7 +205,32 @@ export default function StepResultados({
     )
   }
 
-  const recs = results.recomendacoes || []
+  const recs = results.recommendations || []
+
+  if (recs.length === 0) {
+    return (
+      <div className="step">
+        <div className="results-head">
+          <div className="display">
+            Nenhuma obra
+            <br />
+            <em>recomendada.</em>
+          </div>
+          <div className="subtitle">
+            Nenhuma obra do catalogo corresponde aos criterios indicados.
+            Tenta ajustar o nivel do aluno ou as competencias.
+          </div>
+        </div>
+        <FooterNav
+          onBack={onBack}
+          onNext={onRestart}
+          nextLabel="nova consulta"
+          meta="passo v de v - recomendacao"
+        />
+      </div>
+    )
+  }
+
   const current = recs[currentIdx]
   const hasNext = currentIdx < recs.length - 1
 
@@ -241,7 +239,6 @@ export default function StepResultados({
     setViewMode('single')
   }
 
-  // --- List view ---
   if (viewMode === 'list') {
     return (
       <div className="step">
@@ -275,14 +272,13 @@ export default function StepResultados({
         <FooterNav
           onBack={onBack}
           onNext={onRestart}
-          nextLabel="&#8635; nova consulta"
+          nextLabel="nova consulta"
           meta="passo v de v - recomendacao"
         />
       </div>
     )
   }
 
-  // --- Single view ---
   return (
     <div className="step">
       <div className="results-head">
@@ -292,7 +288,7 @@ export default function StepResultados({
           <em>#{currentIdx + 1}</em>
         </div>
         <div className="subtitle">
-          ordenada por score - {recs.length} obras encontradas no total
+          ordenada por score - obras encontradas no total: {recs.length}
         </div>
       </div>
 
@@ -306,8 +302,8 @@ export default function StepResultados({
           disabled={!hasNext}
         >
           {hasNext
-            ? 'proxima recomendacao →'
-            : '&#10003; chegaste a ultima obra'}
+            ? 'proxima recomendacao'
+            : 'fim das obras'}
         </button>
         <button
           type="button"
@@ -322,12 +318,12 @@ export default function StepResultados({
             className="btn btn-ghost"
             onClick={() => setCurrentIdx(0)}
           >
-            &#8634; voltar a primeira
+            voltar a primeira
           </button>
         )}
       </div>
 
-      {/* Justificacao LLM */}
+      {/* LLM justification */}
       <div className="justif">
         <div className="justif-head">
           <span className="j-title">Comentario - sobre esta obra</span>
@@ -336,17 +332,17 @@ export default function StepResultados({
           </span>
         </div>
         <div className="justif-body">
-          {current.comentario ? (
-            <p>{current.comentario}</p>
+          {current.justification ? (
+            <p>{current.justification}</p>
           ) : (
             <p className="hint">
-              Sem comentario disponivel para esta obra.
+              Sem justificacao disponivel.
             </p>
           )}
         </div>
       </div>
 
-      {/* Painel de inferencia (regras disparadas) */}
+      {/* Inference panel */}
       <div className="inference-toggle">
         <button
           type="button"
@@ -358,28 +354,34 @@ export default function StepResultados({
 
         {showInference && (
           <div className="inference-panel" style={{ textAlign: 'left' }}>
-            <h4>Regras disparadas - {current.nomeObra}</h4>
+            <h4>Rules fired — {current.workName}</h4>
             <div className="work-block">
               <div className="wb-head">
                 <span className="wb-name">
-                  {current.nomeObra}
+                  {current.workName}
                   <span className="wb-diff">
                     {' '}
-                    - dificuldade {current.dificuldade}/6
+                    — difficulty {current.difficulty}/6
                   </span>
                 </span>
                 <span className="wb-score">
                   score - {current.score.toFixed(3)}
                 </span>
               </div>
-              {current.regrasFired?.map((r, i) => (
+              {current.firedRules?.map((r, i) => (
                 <div key={i} className="rule-row">
-                  <span className="r-id">{r.id}</span>
-                  <span className="r-desc">{r.desc}</span>
-                  <span className="r-cf">
-                    {r.cf > 0 ? '+' : ''}
-                    {r.cf.toFixed(2)}
-                  </span>
+                  {typeof r === 'string' ? (
+                    <span className="r-id" style={{ gridColumn: '1 / -1' }}>{r}</span>
+                  ) : (
+                    <>
+                      <span className="r-id">{r.id}</span>
+                      <span className="r-desc">{r.desc}</span>
+                      <span className="r-cf">
+                        {r.cf > 0 ? '+' : ''}
+                        {r.cf.toFixed(2)}
+                      </span>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -390,7 +392,7 @@ export default function StepResultados({
       <FooterNav
         onBack={onBack}
         onNext={onRestart}
-        nextLabel="&#8635; nova consulta"
+        nextLabel="nova consulta"
         meta="passo v de v - recomendacao"
       />
     </div>

@@ -9,14 +9,15 @@ import StepAcompanhamento from './steps/StepAcompanhamento'
 import StepPeriodo from './steps/StepPeriodo'
 import StepResultados from './steps/StepResultados'
 
+/**
+ * Root component. Manages the wizard state (current step, form data, results)
+ * and delegates rendering to the individual step components.
+ */
+
 const INITIAL_STATE = {
   nivelAluno: null,
-  cfNivelAluno: 0.75,
-  nivelIncerteza: null,
   competencias: [],
   motivacao: null,
-  cfMotivacao: 0.75,
-  motivacaoIncerteza: null,
   acompanhamentos: [],
   ultimoPeriodo: null,
 }

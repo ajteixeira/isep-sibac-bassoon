@@ -1,3 +1,4 @@
+/** Navigation bar with back / next buttons and step metadata. */
 export default function FooterNav({
   onBack,
   onNext,

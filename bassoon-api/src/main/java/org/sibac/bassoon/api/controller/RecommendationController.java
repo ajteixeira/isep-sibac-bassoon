@@ -3,42 +3,33 @@ package org.sibac.bassoon.api.controller;
 import org.sibac.bassoon.api.dto.RecommendationRequest;
 import org.sibac.bassoon.api.dto.RecommendationResponse;
 import org.sibac.bassoon.api.service.DroolsService;
-import org.sibac.bassoon.api.service.JustificationService;
+import org.sibac.bassoon.api.llm.JustificationService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
- * Endpoint REST consumido pelo Vue.
+ * REST controller for the recommendation endpoint.
  *
- * POST /recommend
- *   Body: RecommendationRequest (JSON)
- *   Response: RecommendationResponse (JSON)
+ * <p>Accepts a POST with the student profile and returns a ranked list of works
+ * with pedagogical justifications.
  */
 @RestController
 @RequestMapping("/recommend")
-@CrossOrigin(origins = "http://localhost:5173")  // Vue dev server
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
 public class RecommendationController {
 
-    private final DroolsService droolsService;
-    private final JustificationService justificationService;
+  private final DroolsService droolsService;
+  private final JustificationService justificationService;
 
-    public RecommendationController(DroolsService droolsService,
-                                    JustificationService justificationService) {
-        this.droolsService = droolsService;
-        this.justificationService = justificationService;
-    }
+  public RecommendationController(
+      DroolsService droolsService, JustificationService justificationService) {
+    this.droolsService = droolsService;
+    this.justificationService = justificationService;
+  }
 
-    @PostMapping
-    public RecommendationResponse recommend(@RequestBody RecommendationRequest request) {
-
-        // 1. correr motor Drools (R1, R2, R4, R6) + R5 + R7 em Java
-        List<RecommendationResponse.ObraRecomendada> recomendacoes =
-                droolsService.recommend(request);
-
-        // 2. gerar justificacao via LLM
-        String justificacao = justificationService.generateJustification(recomendacoes);
-
-        return new RecommendationResponse(recomendacoes, justificacao);
-    }
+  @PostMapping
+  public RecommendationResponse recommend(@RequestBody RecommendationRequest request) {
+    var works = droolsService.recommend(request);
+    justificationService.fillJustifications(works, request);
+    return new RecommendationResponse(works);
+  }
 }

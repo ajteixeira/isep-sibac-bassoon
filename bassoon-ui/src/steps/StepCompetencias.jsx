@@ -1,7 +1,8 @@
-import { COMP_GROUPS, COMP_BY_ID } from '../data'
+import { COMP_GROUPS, COMP_BY_ID } from '../labels'
 import CFRange from '../components/CFRange'
 import FooterNav from '../components/FooterNav'
 
+/** Step 2 — up to 3 priority skills, each with a certainty factor. */
 export default function StepCompetencias({ state, set, onNext, onBack }) {
   const list = state.competencias || []
   const selectedIds = list.map((c) => c.id)
@@ -39,7 +40,7 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
         slider
       </div>
 
-      {/* Tray das competencias selecionadas */}
+      {/* Selected skills tray */}
       <div className="comp-tray">
         <div className="comp-tray-head">
           <span>
@@ -96,7 +97,7 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
         )}
       </div>
 
-      {/* Grupos de competencias */}
+      {/* Skill groups */}
       {COMP_GROUPS.map((g, gi) => (
         <div key={g.id} className="comp-group">
           <div className="comp-group-head">

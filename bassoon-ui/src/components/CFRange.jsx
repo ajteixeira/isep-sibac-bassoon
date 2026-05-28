@@ -6,6 +6,7 @@ const DEFAULT_CENTER_LABELS = [
   [0.97, 'certeza absoluta'],
 ]
 
+/** Certainty factor slider with labelled thresholds. */
 export default function CFRange({
   value,
   onChange,

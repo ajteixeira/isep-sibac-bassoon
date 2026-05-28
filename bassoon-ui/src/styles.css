@@ -1042,16 +1042,16 @@ button:disabled { cursor: not-allowed; }
   color: var(--ink-faint);
   text-transform: uppercase;
 }
-.rl-pill {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  padding: 2px 7px 3px;
-  border: 1px solid currentColor;
-}
-.current-pill { color: var(--accent); }
+/*.rl-pill {*/
+/*  font-family: var(--mono);*/
+/*  font-size: 9px;*/
+/*  font-weight: 600;*/
+/*  text-transform: uppercase;*/
+/*  letter-spacing: 0.12em;*/
+/*  padding: 2px 7px 3px;*/
+/*  border: 1px solid currentColor;*/
+/*}*/
+/*.current-pill { color: var(--accent); }*/
 
 .rl-title {
   font-family: var(--serif);

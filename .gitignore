@@ -28,6 +28,14 @@ Thumbs.db
 # Environment files
 .env
 
+# Local Spring Boot profiles (contain secrets)
+application-local.properties
+
 # Other
 *.tmp
+nul
+**/nul
+
+# jFuzzyLogic jar (installed manually, not in Maven Central)
+lib/
 

@@ -1,58 +1,93 @@
 package org.sibac.bassoon.api.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.sibac.bassoon.RecommendationEngine;
 import org.sibac.bassoon.api.dto.RecommendationRequest;
 import org.sibac.bassoon.api.dto.RecommendationResponse;
-import org.sibac.bassoon.model.*;
+import org.sibac.bassoon.kb.KnowledgeBase;
+import org.sibac.bassoon.model.Work;
+import org.sibac.bassoon.output.Recommendation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
- * Servico que encapsula o motor de inferencia Drools.
+ * Runs the inference engine and enriches results with catalog metadata.
  *
- * Responsabilidades:
- *   1. Carregar a KB de obras (uma vez, no arranque)
- *   2. Para cada pedido, criar uma sessao Drools, inserir os factos,
- *      correr as regras, e devolver os resultados
- *   3. Aplicar R5 (ordenacao) e R7 (pre-requisitos) em Java
+ * <p>Converts the DTO into engine inputs, runs the pipeline (fuzzy + Drools + ordering +
+ * prerequisites), and wraps each raw {@link Recommendation} with composer, era, video link,
+ * etc. from the catalog.
  */
 @Service
 public class DroolsService {
 
-    // TODO: injectar KieContainer via Spring Bean
-    // @Autowired KieContainer kieContainer;
+  private static final Logger LOG = LoggerFactory.getLogger(DroolsService.class);
 
-    // TODO: carregar lista de obras da KB no arranque (@PostConstruct)
-    // private List<Obra> knowledgeBase;
+  private final RecommendationEngine engine;
+  private final WorkCatalog catalog;
 
-    /**
-     * Corre o motor de inferencia para um dado pedido do professor.
-     *
-     * Fluxo:
-     *   1. Criar nova KieSession
-     *   2. Inserir todas as obras da KB
-     *   3. Inserir uma Hypothesis("candidatura", nome, 0.0) por obra
-     *   4. Converter RecommendationRequest em Evidence e inserir
-     *   5. fireAllRules()
-     *   6. Recolher Hypothesis da working memory
-     *   7. R5 - ordenar por score
-     *   8. R7 - verificar pre-requisitos da obra topo
-     *   9. Devolver lista de ObraRecomendada com regras que dispararam
-     */
-    public List<RecommendationResponse.ObraRecomendada> recommend(RecommendationRequest request) {
+  public DroolsService(WorkCatalog catalog) {
+    this.engine = new RecommendationEngine();
+    this.catalog = catalog;
+    LOG.info("DroolsService initialized with {} works in catalog", catalog.all().size());
+  }
 
-        // TODO: implementar
-        throw new UnsupportedOperationException("DroolsService.recommend() - a implementar");
+  public List<RecommendationResponse.RecommendedWork> recommend(RecommendationRequest request) {
+
+    List<RecommendationEngine.SkillInput> skills = new ArrayList<>();
+    if (request.getSkills() != null) {
+      for (var s : request.getSkills()) {
+        skills.add(new RecommendationEngine.SkillInput(s.getSkill(), s.getCf()));
+      }
     }
 
-    // --- metodos auxiliares ---
+    List<RecommendationEngine.AccompanimentInput> accompaniments = new ArrayList<>();
+    if (request.getAccompaniments() != null) {
+      for (var a : request.getAccompaniments()) {
+        accompaniments.add(
+            new RecommendationEngine.AccompanimentInput(a.getType(), a.getCf()));
+      }
+    }
 
-    // TODO: private List<Evidence> toEvidence(RecommendationRequest request)
-    //   converte o DTO em factos Evidence para inserir na sessao
+    List<Recommendation> results = engine.run(
+        KnowledgeBase.works(),
+        request.getStudentLevel(),
+        request.getMotivation(),
+        skills,
+        request.getLastEra(),
+        accompaniments);
 
-    // TODO: private Obra buscarObra(String nome)
-    //   vai buscar uma obra da KB pelo nome (para R7)
+    List<RecommendationResponse.RecommendedWork> recommendations =
+        results.stream().map(rec -> {
+          RecommendationResponse.RecommendedWork dto =
+              new RecommendationResponse.RecommendedWork();
+          dto.setWorkName(rec.getWorkName());
+          dto.setScore(rec.getScore());
+          dto.setFiredRules(rec.getFiredRules());
 
-    // TODO: private List<ObraRecomendada> aplicarR7(List<ObraRecomendada> ordenadas)
-    //   verifica se a obra topo tem pre-requisito e ajusta a lista
+          Work work = catalog.byName(rec.getWorkName());
+          if (work != null) {
+            dto.setComposer(work.getComposer());
+            dto.setEra(work.getEra());
+            dto.setCountry(work.getCountry());
+            dto.setDifficulty(work.getDifficultyLevel().getValue());
+            dto.setAccompaniment(work.getAccompaniment());
+            if (work.getVideoLink() != null && !work.getVideoLink().isEmpty()) {
+              dto.setVideoLink(work.getVideoLink());
+            }
+            if (work.getPrerequisiteId() >= 0) {
+              Work prereq = catalog.byId(work.getPrerequisiteId());
+              if (prereq != null) {
+                dto.setPrerequisite(prereq.getName());
+              }
+            }
+          }
+          return dto;
+        }).collect(Collectors.toList());
+
+    LOG.info("Recommendation generated: {} works", recommendations.size());
+    return recommendations;
+  }
 }

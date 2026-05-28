@@ -1,0 +1,31 @@
+package rules;
+
+import org.sibac.bassoon.model.Evidence;
+import org.sibac.bassoon.model.EvidenceType;
+import org.sibac.bassoon.model.Hypothesis;
+import org.sibac.bassoon.model.Work;
+import org.sibac.bassoon.cf.TrackingAgendaListener;
+
+// =====================================================================
+// ERA REPETITION PENALTY
+//
+// If the teacher indicates the last stylistic period studied
+// (EvidenceType.LAST_ERA), works from the same era receive a light
+// penalty (CF -0.3) to encourage variety across the student's path.
+//
+// The CF is low and negative because repeating the same era is not a
+// serious problem — just a soft pedagogical preference (avoid doing
+// only Baroque for the whole year, for example).
+// =====================================================================
+
+rule "era penalty"
+@CF(-0.3)
+lock-on-active true
+when
+    Evidence( description == EvidenceType.LAST_ERA, $era : value )
+    Work( $name : name, era == $era )
+then
+    Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class,
+                        "candidate", $name);
+    $h.update();
+end

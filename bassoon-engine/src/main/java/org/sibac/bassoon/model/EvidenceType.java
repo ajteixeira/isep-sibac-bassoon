@@ -1,27 +1,20 @@
 package org.sibac.bassoon.model;
 
 /**
- * Tipos de Evidence que o professor pode fornecer como input.
+ * Types of evidence the teacher can provide.
  *
- * Cada tipo indica que campo da consulta esta a ser especificado.
- * O valor correspondente deve usar o enum adequado:
- *
- *   NIVEL_ALUNO         -> valor: NivelAluno      (obrigatorio)
- *   NIVEL_INCERTEZA     -> valor: NivelAluno      (opcional - para que lado aponta a duvida)
- *   COMPETENCIA_1       -> valor: Competencia     (obrigatorio - competencia prioritaria)
- *   COMPETENCIA_2       -> valor: Competencia     (opcional)
- *   COMPETENCIA_3       -> valor: Competencia     (opcional)
- *   MOTIVACAO           -> valor: Motivacao       (opcional)
- *   MOTIVACAO_INCERTEZA -> valor: Motivacao       (opcional - para que lado aponta a duvida)
- *   ULTIMO_PERIODO      -> valor: Epoca           (opcional - para penalizacao R6)
+ * <p>STUDENT_LEVEL — StudentLevel (required)
+ * SKILL_1, SKILL_2, SKILL_3 — Skill (first required, others optional)
+ * MOTIVATION — Motivation (optional)
+ * LAST_ERA — Era (optional, for stylistic variety penalty)
+ * PREFERRED_ACCOMPANIMENT — Accompaniment (optional, teacher preference)
  */
 public enum EvidenceType {
-    NIVEL_ALUNO,
-    NIVEL_INCERTEZA,
-    COMPETENCIA_1,
-    COMPETENCIA_2,
-    COMPETENCIA_3,
-    MOTIVACAO,
-    MOTIVACAO_INCERTEZA,
-    ULTIMO_PERIODO
+  STUDENT_LEVEL,
+  SKILL_1,
+  SKILL_2,
+  SKILL_3,
+  MOTIVATION,
+  LAST_ERA,
+  PREFERRED_ACCOMPANIMENT
 }

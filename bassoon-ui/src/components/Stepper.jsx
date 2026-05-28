@@ -1,5 +1,6 @@
 const ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
+/** Progress bar showing wizard steps (I–VI) with active/done states. */
 export default function Stepper({ steps, current }) {
   return (
     <nav className="stepper" role="navigation">

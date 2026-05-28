@@ -1,3 +1,4 @@
+/** Radio-button grid for selecting a single value from a list of options. */
 export default function RadioRow({ options, value, onChange, columns = 3 }) {
   return (
     <div className={`radio-row cols-${columns}`}>

@@ -1,43 +1,35 @@
 // ---------------------------------------------------------------------------
 // RecommendationService
-// Comunicacao com o bassoon-api (Spring Boot em localhost:8080).
-// O proxy do Vite redireciona /recommend para o backend em dev.
+// Calls the bassoon-api REST endpoint (Spring Boot, localhost:8080).
+// In dev, Vite proxies /recommend to the backend.
 //
-// USE_MOCK = true  -> devolve dados mock (para desenvolvimento sem backend)
-// USE_MOCK = false -> chama a API real
+// USE_MOCK = true  -> returns mock data (dev without backend)
+// USE_MOCK = false -> calls the real API
 // ---------------------------------------------------------------------------
 
 import { MOCK_RESPONSE } from './mockData'
 
 const API_BASE = '/recommend'
-const USE_MOCK = true
+const USE_MOCK = false
 
-/**
- * Converte o estado do wizard no DTO esperado pelo RecommendationController.
- */
 function buildRequest(state) {
   return {
-    nivelAluno: state.nivelAluno,
-    cfNivelAluno: state.cfNivelAluno,
-    nivelIncerteza: state.nivelIncerteza || null,
-    competencias: state.competencias.map((c) => ({
-      competencia: c.id,
+    studentLevel: state.nivelAluno,
+    skills: state.competencias.map((c) => ({
+      skill: c.id,
       cf: c.cf,
     })),
-    motivacao: state.motivacao || null,
-    cfMotivacao: state.motivacao ? state.cfMotivacao : null,
-    motivacaoIncerteza: state.motivacaoIncerteza || null,
-    ultimoPeriodo: state.ultimoPeriodo || null,
+    motivation: state.motivacao || null,
+    accompaniments: (state.acompanhamentos || []).map((a) => ({
+      type: a.id,
+      cf: a.cf,
+    })),
+    lastEra: state.ultimoPeriodo || null,
   }
 }
 
-/**
- * Envia o pedido de recomendacao ao motor pericial.
- * Retorna o RecommendationResponse (recomendacoes + justificacao).
- */
 export async function recommend(state) {
   if (USE_MOCK) {
-    // Simula latencia de rede
     await new Promise((r) => setTimeout(r, 1200))
     return MOCK_RESPONSE
   }

@@ -1,7 +1,7 @@
 # ===========================================================================
 # bassoon-ui — multi-stage build
-# Stage 1: npm build (gera HTML/CSS/JS estaticos)
-# Stage 2: serve com nginx (inclui proxy reverso para a API)
+# Stage 1: npm build (static HTML/CSS/JS)
+# Stage 2: serve with nginx (reverse proxy to the API)
 # ===========================================================================
 
 # --- Build ---
@@ -18,10 +18,10 @@ RUN npm run build
 # --- Runtime ---
 FROM nginx:stable-alpine
 
-# Configuracao nginx com proxy reverso para a API
+# nginx config with reverse proxy to the API
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copiar ficheiros estaticos
+# Copy static files
 COPY --from=build /src/dist /usr/share/nginx/html
 
 EXPOSE 80

@@ -1,7 +1,8 @@
-import { ACOMPANHAMENTOS } from '../data'
+import { ACOMPANHAMENTOS } from '../labels'
 import CFRange from '../components/CFRange'
 import FooterNav from '../components/FooterNav'
 
+/** Step 4 — preferred accompaniment types (optional, multi-select). */
 export default function StepAcompanhamento({ state, set, onNext, onBack }) {
   const selected = state.acompanhamentos || []
 

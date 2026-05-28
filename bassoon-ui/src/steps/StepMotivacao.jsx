@@ -1,17 +1,9 @@
-import { MOTIVACOES } from '../data'
+import { MOTIVACOES } from '../labels'
 import RadioRow from '../components/RadioRow'
-import CFRange from '../components/CFRange'
-import DirectionPicker from '../components/DirectionPicker'
 import FooterNav from '../components/FooterNav'
 
+/** Step 3 — student motivation (optional, shifts difficulty range). */
 export default function StepMotivacao({ state, set, onNext, onBack }) {
-  const isNeutra = state.motivacao === 'NEUTRA'
-  const hasDoubt = state.cfMotivacao < 0.95
-  const showDirection = isNeutra && hasDoubt
-
-  const leftOption = MOTIVACOES.find((m) => m.id === 'BAIXA')
-  const rightOption = MOTIVACOES.find((m) => m.id === 'ALTA')
-
   return (
     <div className="step">
       <div className="display">
@@ -31,7 +23,7 @@ export default function StepMotivacao({ state, set, onNext, onBack }) {
           <button
             type="button"
             className="sk-btn"
-            onClick={() => set({ motivacao: null, motivacaoIncerteza: null })}
+            onClick={() => set({ motivacao: null })}
           >
             Limpar selecao
           </button>
@@ -46,44 +38,11 @@ export default function StepMotivacao({ state, set, onNext, onBack }) {
         <RadioRow
           options={MOTIVACOES}
           value={state.motivacao}
-          onChange={(v) => {
-            const patch = { motivacao: v }
-            if (v !== 'NEUTRA') patch.motivacaoIncerteza = null
-            set(patch)
-          }}
+          onChange={(v) =>
+            set({ motivacao: state.motivacao === v ? null : v })
+          }
         />
       </div>
-
-      {state.motivacao && (
-        <div className="field">
-          <div className="field-head">
-            <span className="q">ii. grau de certeza</span>
-            <span className="section-label">opcional</span>
-          </div>
-          <CFRange
-            value={state.cfMotivacao}
-            onChange={(v) => {
-              const patch = { cfMotivacao: v }
-              if (v >= 0.95) patch.motivacaoIncerteza = null
-              set(patch)
-            }}
-          />
-
-          {showDirection && (
-            <>
-              <span className="dir-caption">
-                em que sentido pende a duvida?
-              </span>
-              <DirectionPicker
-                value={state.motivacaoIncerteza}
-                onChange={(v) => set({ motivacaoIncerteza: v })}
-                leftOption={leftOption}
-                rightOption={rightOption}
-              />
-            </>
-          )}
-        </div>
-      )}
 
       <FooterNav
         onBack={onBack}

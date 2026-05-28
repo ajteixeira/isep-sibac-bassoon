@@ -1,0 +1,76 @@
+/*
+ * suitability.fcl
+ *
+ * Mamdani fuzzy inference system that computes the SUITABILITY of a work
+ * for a student, from two related inputs:
+ *   - studentLevel : student level adjusted by motivation (0.5..6.5)
+ *   - workDifficulty : difficulty of the work (from the Work model, 1..6)
+ *
+ * Output:
+ *   - suitability : degree of suitability 0..1 (becomes the initial CF of the candidacy)
+ *
+ * Domain expert rule (asymmetry): a work ONE LEVEL BELOW the student is more
+ * acceptable than a work ONE LEVEL ABOVE. The difference is smooth, not a cutoff.
+ * This asymmetry is encoded in the 9-rule matrix in the RULEBLOCK.
+ */
+FUNCTION_BLOCK suitability
+
+VAR_INPUT
+    studentLevel   : REAL;   // 0.5..6.5 to accommodate motivation shift
+    workDifficulty : REAL;   // 1..6 (integer, from the Work model)
+END_VAR
+
+VAR_OUTPUT
+    suitability : REAL;      // 0..1, becomes the initial candidacy CF
+END_VAR
+
+// --- Student level fuzzification ---
+// The axis follows the pedagogical scale 1..6, with margin for motivation
+// to shift the student up or down by one point.
+FUZZIFY studentLevel
+    TERM beginner     := (0, 1) (1.5, 1) (3, 0) ;
+    TERM intermediate := (2, 0) (3, 1) (4, 1) (5, 0) ;
+    TERM advanced     := (3, 0) (4.5, 1) (6.5, 1) ;
+END_FUZZIFY
+
+// --- Work difficulty fuzzification (3 terms on the 1..6 axis) ---
+// easy = band 1-2 ; medium = band 3-4 ; hard = band 5-6
+FUZZIFY workDifficulty
+    TERM easy   := (1, 1) (2, 1) (3.5, 0) ;
+    TERM medium := (2, 0) (3.5, 1) (5, 0) ;
+    TERM hard   := (3.5, 0) (5, 1) (6, 1) ;
+END_FUZZIFY
+
+// --- Suitability defuzzification (4 terms for graded asymmetry) ---
+DEFUZZIFY suitability
+    TERM veryLow := (0, 1) (0.2, 0) ;
+    TERM low     := (0.1, 0) (0.3, 1) (0.5, 0) ;
+    TERM medium  := (0.4, 0) (0.6, 1) (0.8, 0) ;
+    TERM high    := (0.7, 0) (0.9, 1) (1, 1) ;
+    METHOD : COG;       // centre of gravity (smooth output)
+    DEFAULT := 0;       // if no rule fires
+END_DEFUZZIFY
+
+RULEBLOCK No1
+    AND  : MIN;         // "A AND B" uses the minimum of the membership degrees
+    ACT  : MIN;         // activation by clipping (min)
+    ACCU : MAX;         // accumulation by maximum
+
+    // BEGINNER student: easy works are ideal; difficulty rises penalise quickly
+    RULE 1 : IF studentLevel IS beginner     AND workDifficulty IS easy   THEN suitability IS high;
+    RULE 2 : IF studentLevel IS beginner     AND workDifficulty IS medium THEN suitability IS low;
+    RULE 3 : IF studentLevel IS beginner     AND workDifficulty IS hard   THEN suitability IS veryLow;
+
+    // INTERMEDIATE student: medium works are ideal; one level below (easy=medium)
+    // is more acceptable than one level above (hard=low) -> asymmetry
+    RULE 4 : IF studentLevel IS intermediate AND workDifficulty IS easy   THEN suitability IS medium;
+    RULE 5 : IF studentLevel IS intermediate AND workDifficulty IS medium THEN suitability IS high;
+    RULE 6 : IF studentLevel IS intermediate AND workDifficulty IS hard   THEN suitability IS low;
+
+    // ADVANCED student: hard works are ideal; stepping down is tolerated smoothly
+    RULE 7 : IF studentLevel IS advanced     AND workDifficulty IS easy   THEN suitability IS low;
+    RULE 8 : IF studentLevel IS advanced     AND workDifficulty IS medium THEN suitability IS medium;
+    RULE 9 : IF studentLevel IS advanced     AND workDifficulty IS hard   THEN suitability IS high;
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK

@@ -1,4 +1,4 @@
-# Dependencias e builds locais
+# Local dependencies and build output
 **/node_modules/
 **/dist/
 **/target/
@@ -13,9 +13,9 @@
 .git/
 .gitignore
 
-# Prototipo (nao faz parte da app)
+# Prototype (not part of the app)
 claude_design_project/
 
-# Ficheiros temporarios
+# Temporary files
 **/*.timestamp-*
 **/*.log

@@ -32,15 +32,21 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Motor Drools -->
+        <!-- Drools engine -->
         <dependency>
             <groupId>org.sibac.bassoon</groupId>
             <artifactId>bassoon-engine</artifactId>
             <version>${project.version}</version>
         </dependency>
 
-        <!-- TODO: adicionar dependencia do SDK do LLM escolhido -->
-        <!-- Opcao Claude: com.anthropic / Opcao OpenAI: com.openai -->
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- LLM client: uses java.net.http.HttpClient (no external SDK needed) -->
     </dependencies>
 
     <build>
@@ -49,6 +55,21 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring.boot.version}</version>
+                <configuration>
+                    <requiresUnpack>
+                        <dependency>
+                            <groupId>org.sibac.bassoon</groupId>
+                            <artifactId>bassoon-engine</artifactId>
+                        </dependency>
+                    </requiresUnpack>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

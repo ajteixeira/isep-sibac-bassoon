@@ -1,0 +1,31 @@
+package rules;
+
+import org.sibac.bassoon.model.Evidence;
+import org.sibac.bassoon.model.EvidenceType;
+import org.sibac.bassoon.model.Hypothesis;
+import org.sibac.bassoon.model.Work;
+import org.sibac.bassoon.cf.TrackingAgendaListener;
+
+// =====================================================================
+// ACCOMPANIMENT PREFERENCE
+//
+// If the teacher indicates a preferred accompaniment type
+// (EvidenceType.PREFERRED_ACCOMPANIMENT), this rule gives a small
+// positive boost (CF 0.3) to works that use that type.
+//
+// The CF is low because accompaniment is a soft criterion:
+// a preference, not a strong pedagogical requirement.
+// =====================================================================
+
+rule "accompaniment match"
+@CF(0.3)
+lock-on-active true
+when
+    Evidence( description == EvidenceType.PREFERRED_ACCOMPANIMENT,
+              $acc : value )
+    Work( $name : name, accompaniment == $acc )
+then
+    Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class,
+                        "candidate", $name);
+    $h.update();
+end
