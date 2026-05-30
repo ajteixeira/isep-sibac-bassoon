@@ -19,11 +19,11 @@ import org.springframework.stereotype.Component;
 public class WorkCatalog {
 
   private final List<Work> works;
-  private final Map<String, Work> byName;
+  private final Map<Double, Work> byId;
 
   public WorkCatalog() {
     this.works = KnowledgeBase.works();
-    this.byName = works.stream().collect(Collectors.toMap(Work::getName, w -> w));
+    this.byId = works.stream().collect(Collectors.toMap(Work::getId, w -> w));
   }
 
   /** All works in the catalog. */
@@ -31,13 +31,8 @@ public class WorkCatalog {
     return works;
   }
 
-  /** The work with this name, or null. */
-  public Work byName(String name) {
-    return byName.get(name);
-  }
-
   /** The work with this id, or null. */
   public Work byId(double id) {
-    return works.stream().filter(w -> w.getId() == id).findFirst().orElse(null);
+    return byId.get(id);
   }
 }

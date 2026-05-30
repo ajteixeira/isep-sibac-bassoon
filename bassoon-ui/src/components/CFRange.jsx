@@ -1,26 +1,12 @@
-const DEFAULT_CENTER_LABELS = [
-  [0.00, 'muito incerto'],
-  [0.25, 'em duvida'],
-  [0.55, 'razoavelmente certo'],
-  [0.80, 'confiante'],
-  [0.97, 'certeza absoluta'],
-]
-
-/** Certainty factor slider with labelled thresholds. */
+/** Certainty factor slider. */
 export default function CFRange({
   value,
   onChange,
-  leftLabel = 'em duvida',
-  rightLabel = 'certeza absoluta',
-  centerLabels = DEFAULT_CENTER_LABELS,
+  leftLabel = 'pouco prioritario',
+  rightLabel = 'muito prioritario',
 }) {
   const v = Math.max(0, Math.min(1, value))
   const pct = v * 100
-
-  let caption = centerLabels[0][1]
-  for (const [threshold, lbl] of centerLabels) {
-    if (v >= threshold) caption = lbl
-  }
 
   return (
     <div className="cf-range">
@@ -38,8 +24,7 @@ export default function CFRange({
       <div className="cf-range-labels">
         <span className="left">&larr; {leftLabel}</span>
         <span className="center">
-          <span className="caption">{caption}</span>
-          <span className="fc-num">FC = {v.toFixed(2)}</span>
+          <span className="fc-num">CF = {v.toFixed(2)}</span>
         </span>
         <span className="right">{rightLabel} &rarr;</span>
       </div>

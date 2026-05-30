@@ -28,31 +28,57 @@ export default function StepAcompanhamento({ state, set, onNext, onBack }) {
         preferencial?
       </div>
       <div className="subtitle">
-        opcional - influencia a selecao de obras por tipo de acompanhamento
-      </div>
-
-      <div className="skip-row">
-        <span className="sk-text">
-          {selected.length > 0
-            ? `${selected.length} ${selected.length === 1 ? 'opcao selecionada' : 'opcoes selecionadas'}`
-            : 'Sem indicacao - o acompanhamento nao vai ser considerado'}
-        </span>
-        {selected.length > 0 && (
-          <button
-            type="button"
-            className="sk-btn"
-            onClick={() => set({ acompanhamentos: [] })}
-          >
-            Limpar selecao
-          </button>
-        )}
+        Indica o acompanhamento preferido - obras com esse acompanhamento ganham prioridade
       </div>
 
       <div className="field">
         <div className="field-head">
-          <span className="q">i. tipo de acompanhamento</span>
+          <span className="q">acompanhamento preferido</span>
           <span className="section-label">opcional · multipla escolha</span>
         </div>
+
+        {/* Selected items tray */}
+        <div className="comp-tray">
+          <div className="comp-tray-head">
+            <span>
+              selecionados - <span className="count">{selected.length}</span>
+            </span>
+          </div>
+
+          {selected.length === 0 ? (
+            <div className="comp-tray-empty">
+              <em>Nada selecionado.</em>
+              Clica em um ou vários tipos de acompanhamento abaixo
+            </div>
+          ) : (
+            selected.map((a) => {
+              const info = ACOMPANHAMENTOS.find((x) => x.id === a.id)
+              return (
+                <div key={a.id} className="comp-row">
+                  <div className="cr-name">{info?.label}</div>
+                  <div className="cr-slider">
+                    <CFRange
+                      value={a.cf}
+                      onChange={(v) => setCf(a.id, v)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="cr-remove"
+                    onClick={() => toggle(a.id)}
+                    aria-label="remover acompanhamento"
+                    title="remover"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )
+            })
+          )}
+        </div>
+
+        {/* Available options */}
+        <div className="comp-group">
         <div className="comp-chips">
           {ACOMPANHAMENTOS.map((a) => (
             <button
@@ -65,32 +91,12 @@ export default function StepAcompanhamento({ state, set, onNext, onBack }) {
             </button>
           ))}
         </div>
-      </div>
-
-      {selected.length > 0 && (
-        <div className="field">
-          <div className="field-head">
-            <span className="q">ii. grau de certeza por opcao</span>
-            <span className="section-label">opcional</span>
-          </div>
-          <div className="acomp-tray">
-            {selected.map((a) => {
-              const info = ACOMPANHAMENTOS.find((x) => x.id === a.id)
-              return (
-                <div key={a.id} className="acomp-row">
-                  <span className="acomp-label">{info?.label}</span>
-                  <CFRange value={a.cf} onChange={(v) => setCf(a.id, v)} />
-                </div>
-              )
-            })}
-          </div>
         </div>
-      )}
+      </div>
 
       <FooterNav
         onBack={onBack}
         onNext={onNext}
-        meta="passo iv de vi - acompanhamento"
       />
     </div>
   )

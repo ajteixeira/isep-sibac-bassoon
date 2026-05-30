@@ -53,7 +53,8 @@ public class Hypothesis implements CfFact {
     double lhsMinimum = TrackingAgendaListener.getLHSminimumCF(this);
     double contribution = lhsMinimum * TrackingAgendaListener.getRuleCF();
     this.cf = Mycin.combine(this.cf, contribution);
-    RuleFiredTracker.record(this, TrackingAgendaListener.getRuleName());
+    RuleFiredTracker.record(this, TrackingAgendaListener.getRuleName(),
+        TrackingAgendaListener.getRuleCF(), TrackingAgendaListener.extractDetail());
     TrackingAgendaListener.getKieSession().update(handle, this);
   }
 

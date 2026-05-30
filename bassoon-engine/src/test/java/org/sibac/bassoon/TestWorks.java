@@ -33,13 +33,13 @@ public final class TestWorks {
   /**
    * Catalog of 3 test works.
    *
-   * <p>Baroque Solo Piece: dif 1, BAROQUE, SOLO, TRILLS=HIGH, no prereq.
-   * Classical Piano Piece: dif 3, CLASSICAL, PIANO, LEGATO=HIGH, prereq = Baroque Solo.
-   * Romantic Orchestral Piece: dif 6, ROMANTIC, ORCHESTRA, DYNAMICS=NONE, no prereq.
+   * <p>Baroque Solo Piece: dif 4, BAROQUE, SOLO, TRILLS=HIGH, no prereq.
+   * Classical Piano Piece: dif 4, CLASSICAL, PIANO, LEGATO=HIGH, prereq = Baroque Solo.
+   * Romantic Orchestral Piece: dif 4, ROMANTIC, ORCHESTRA, DYNAMICS=AVOID, no prereq.
    */
   public static List<Work> catalog() {
     return List.of(
-        // id=10: easy, baroque, solo -> passes fuzzy for intermediate (intermediate+easy=medium)
+        // id=10: medium, baroque, solo -> passes fuzzy for intermediate and advanced
         new Work(
             ID_BAROQUE_SOLO,
             BAROQUE_SOLO,
@@ -47,15 +47,15 @@ public final class TestWorks {
             Era.BAROQUE,
             "Germany",
             Accompaniment.SOLO,
-            DifficultyLevel.LEVEL_1,
+            DifficultyLevel.LEVEL_4,
             "",
             -1,
             Map.ofEntries(
                 entry(Skill.TRILLS, SkillLevel.HIGH),
-                entry(Skill.LEGATO, SkillLevel.LOW),
-                entry(Skill.STACCATO, SkillLevel.LOW))),
+                entry(Skill.LEGATO, SkillLevel.MEDIUM),
+                entry(Skill.STACCATO, SkillLevel.MEDIUM))),
 
-        // id=20: medium, classical, piano -> passes fuzzy (intermediate+medium=high); prereq=10
+        // id=20: medium, classical, piano -> passes fuzzy for intermediate and advanced; prereq=10
         new Work(
             ID_CLASSICAL_PIANO,
             CLASSICAL_PIANO,
@@ -63,7 +63,7 @@ public final class TestWorks {
             Era.CLASSICAL,
             "Austria",
             Accompaniment.PIANO,
-            DifficultyLevel.LEVEL_3,
+            DifficultyLevel.LEVEL_4,
             "",
             ID_BAROQUE_SOLO,
             Map.ofEntries(
@@ -71,7 +71,7 @@ public final class TestWorks {
                 entry(Skill.LEGATO, SkillLevel.HIGH),
                 entry(Skill.STACCATO, SkillLevel.MEDIUM))),
 
-        // id=30: hard, romantic, orchestra -> does NOT pass fuzzy (intermediate+hard=low < 0.4)
+        // id=30: medium, romantic, orchestra -> passes fuzzy for intermediate and advanced
         new Work(
             ID_ROMANTIC_ORCH,
             ROMANTIC_ORCH,
@@ -79,12 +79,12 @@ public final class TestWorks {
             Era.ROMANTIC,
             "France",
             Accompaniment.ORCHESTRA,
-            DifficultyLevel.LEVEL_6,
+            DifficultyLevel.LEVEL_4,
             "",
             -1,
             Map.ofEntries(
                 entry(Skill.TRILLS, SkillLevel.HIGH),
                 entry(Skill.LEGATO, SkillLevel.HIGH),
-                entry(Skill.DYNAMICS, SkillLevel.NONE))));
+                entry(Skill.DYNAMICS, SkillLevel.AVOID))));
   }
 }

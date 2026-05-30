@@ -10,17 +10,26 @@ import java.util.List;
  */
 public class Recommendation {
 
+  private final double workId;
   private final String workName;
   private final double score;
+  private final double initialScore;
   private final String justification;
-  private final List<String> firedRules;
+  private final List<FiredRule> firedRules;
 
   public Recommendation(
-      String workName, double score, String justification, List<String> firedRules) {
+      double workId, String workName, double score, double initialScore,
+      String justification, List<FiredRule> firedRules) {
+    this.workId = workId;
     this.workName = workName;
     this.score = score;
+    this.initialScore = initialScore;
     this.justification = justification;
     this.firedRules = List.copyOf(firedRules);
+  }
+
+  public double getWorkId() {
+    return workId;
   }
 
   public String getWorkName() {
@@ -31,11 +40,15 @@ public class Recommendation {
     return score;
   }
 
+  public double getInitialScore() {
+    return initialScore;
+  }
+
   public String getJustification() {
     return justification;
   }
 
-  public List<String> getFiredRules() {
+  public List<FiredRule> getFiredRules() {
     return firedRules;
   }
 

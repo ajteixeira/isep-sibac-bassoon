@@ -79,9 +79,9 @@ public class Work {
     return prerequisiteId;
   }
 
-  // returns the skill level for a given skill; LOW if not defined
+  // returns the skill level for a given skill; MEDIUM if not defined
   public SkillLevel getSkillLevel(Skill skill) {
-    return skills.getOrDefault(skill, SkillLevel.LOW);
+    return skills.getOrDefault(skill, SkillLevel.MEDIUM);
   }
 
   // Drools-friendly overload: accepts Object (avoids casts in DRL constraints)

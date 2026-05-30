@@ -7,35 +7,17 @@ export default function StepPeriodo({ state, set, onSubmit, onBack }) {
   return (
     <div className="step">
       <div className="display">
-        Qual foi o <em>ultimo</em>
+        Qual foi o último
         <br />
-        periodo estudado?
+        <em>período</em> estudado?
       </div>
       <div className="subtitle">
-        opcional - o sistema usa esta informacao para evitar repetir o mesmo
-        estilo no proximo repertorio
-      </div>
-
-      <div className="skip-row">
-        <span className="sk-text">
-          {state.ultimoPeriodo
-            ? `Selecionado: ${EPOCAS.find((e) => e.id === state.ultimoPeriodo)?.label}`
-            : 'Sem indicacao - o sistema nao vai penalizar nenhum periodo'}
-        </span>
-        {state.ultimoPeriodo && (
-          <button
-            type="button"
-            className="sk-btn"
-            onClick={() => set({ ultimoPeriodo: null })}
-          >
-            Limpar selecao
-          </button>
-        )}
+        Indica o último período estudado - obras da mesma epoca perdem prioridade
       </div>
 
       <div className="field">
         <div className="field-head">
-          <span className="q">periodo estilistico</span>
+          <span className="q">período estilístico</span>
           <span className="section-label">opcional</span>
         </div>
         <RadioRow
@@ -51,9 +33,8 @@ export default function StepPeriodo({ state, set, onSubmit, onBack }) {
       <FooterNav
         onBack={onBack}
         onNext={onSubmit}
-        nextLabel="recomendar repertorio"
+        nextLabel="recomendar repertório"
         nextEmphatic
-        meta="passo v de vi - periodo"
       />
     </div>
   )

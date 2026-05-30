@@ -2,16 +2,15 @@
 export default function StepIntro({ onStart }) {
   return (
     <div className="step step-intro">
-      <div className="intro-eyebrow">recomendacao de repertorio</div>
+      <div className="intro-eyebrow">recomendação de repertório</div>
       <div className="display">
-        Vamos <em>recomendar</em>
+        Que obra
         <br />
-        uma obra.
+        <em>estudar a seguir?</em>
       </div>
       <div className="subtitle">
-        Quatro perguntas rapidas sobre o aluno - o sistema usa a base de
-        conhecimento do perito para sugerir obras alinhadas com nivel,
-        competencias e contexto.
+        Descreve o aluno e o sistema cruza esse perfil com o conhecimento
+        do perito para sugerir as obras mais adequadas.
       </div>
       <div className="intro-actions">
         <button
@@ -19,11 +18,8 @@ export default function StepIntro({ onStart }) {
           className="btn btn-primary intro-cta"
           onClick={onStart}
         >
-          Comecar &rarr;
+          Começar &rarr;
         </button>
-        <span className="intro-meta">
-          dura cerca de 1 minuto - podes saltar perguntas opcionais
-        </span>
       </div>
     </div>
   )

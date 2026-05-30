@@ -31,16 +31,21 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
   return (
     <div className="step">
       <div className="display">
-        Que <em>competencias</em>
+        Que <em>competências</em>
         <br />
         queres trabalhar?
       </div>
       <div className="subtitle">
-        Escolhe ate tres competencias - ajusta a importancia de cada uma com o
-        slider
+        Indica as competências a trabalhar - o sistema favorece obras que as desenvolvem
       </div>
 
       {/* Selected skills tray */}
+      <div className="field">
+        <div className="field-head">
+          <span className="q">competências selecionadas</span>
+          <span className="section-label">obrigatório · min. 1</span>
+        </div>
+
       <div className="comp-tray">
         <div className="comp-tray-head">
           <span>
@@ -56,7 +61,7 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
         {list.length === 0 ? (
           <div className="comp-tray-empty">
             <em>Ainda nada escolhido.</em>
-            Clica em pelo menos uma competencia abaixo
+            Clica em pelo menos uma competência abaixo
           </div>
         ) : (
           list.map((item) => {
@@ -71,15 +76,8 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
                   <CFRange
                     value={item.cf}
                     onChange={(v) => updateCf(item.id, v)}
-                    leftLabel="pouco importante"
-                    rightLabel="muito importante"
-                    centerLabels={[
-                      [0.0, 'marginal'],
-                      [0.25, 'leve'],
-                      [0.5, 'relevante'],
-                      [0.75, 'importante'],
-                      [0.92, 'essencial'],
-                    ]}
+                    leftLabel="pouco prioritario"
+                    rightLabel="muito prioritario"
                   />
                 </div>
                 <button
@@ -95,6 +93,7 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
             )
           })
         )}
+      </div>
       </div>
 
       {/* Skill groups */}
@@ -128,7 +127,6 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
         onBack={onBack}
         onNext={onNext}
         nextDisabled={!canAdvance}
-        meta="passo ii de vi - competencias"
       />
     </div>
   )

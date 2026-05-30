@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { EPOCAS, ACOMPANHAMENTOS } from '../labels'
+import { useState, useEffect } from 'react'
+import { EPOCAS, ACOMPANHAMENTOS, COMP_BY_ID, NIVEIS, MOTIVACOES } from '../labels'
 import FooterNav from '../components/FooterNav'
 
 function YouTubeEmbed({ videoLink, title }) {
   if (!videoLink) {
     return (
       <div className="yt-empty">
-        <span>sem gravacao de referencia</span>
+        <span>sem gravação de referência</span>
       </div>
     )
   }
@@ -46,18 +46,18 @@ function RecommendCard({ work, idx, total }) {
 
         <div className="rec-meta">
           <div>
-            <span className="m-key">per</span>
+            <span className="m-key">período</span>
             {epocaLabel}
           </div>
           {work.country && (
             <div>
-              <span className="m-key">pais</span>
+              <span className="m-key">país</span>
               {work.country}
             </div>
           )}
           {acomp && (
             <div>
-              <span className="m-key">acmp</span>
+              <span className="m-key">acompanhamento</span>
               {acomp}
             </div>
           )}
@@ -86,13 +86,13 @@ function RecommendList({ recs, currentIdx, onPick }) {
           <li
             key={w.workName}
             className={`rec-list-row ${isCurrent ? 'current' : ''}`}
+            onClick={() => onPick(i)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(i); } }}
+            aria-label={`Ver detalhes de ${w.workName}`}
           >
-            <button
-              type="button"
-              className="rl-thumb"
-              onClick={() => onPick(i)}
-              aria-label={`View ${w.workName}`}
-            >
+            <span className="rl-thumb" aria-hidden="true">
               {w.videoLink && (
                 <img
                   src={`https://i.ytimg.com/vi/${w.videoLink}/mqdefault.jpg`}
@@ -104,7 +104,7 @@ function RecommendList({ recs, currentIdx, onPick }) {
               )}
               <span className="rl-play" aria-hidden="true">
               </span>
-            </button>
+            </span>
 
             <div className="rl-body">
               <div className="rl-rank-row">
@@ -112,6 +112,11 @@ function RecommendList({ recs, currentIdx, onPick }) {
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className="rl-score">score {w.score.toFixed(2)}</span>
+                {w.prerequisite && (
+                  <span className="rl-prereq">
+                    pre-req &mdash; {w.prerequisite}
+                  </span>
+                )}
               </div>
               <div className="rl-title">{w.workName}</div>
               <div className="rl-composer">{w.composer}</div>
@@ -127,8 +132,6 @@ function RecommendList({ recs, currentIdx, onPick }) {
                 )}
               </div>
             </div>
-
-
           </li>
         )
       })}
@@ -146,10 +149,15 @@ export default function StepResultados({
   error,
   onRestart,
   onBack,
+  state,
 }) {
   const [showInference, setShowInference] = useState(false)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [viewMode, setViewMode] = useState('single')
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [viewMode])
 
   if (loading) {
     return (
@@ -161,13 +169,13 @@ export default function StepResultados({
             <em>motor pericial</em>...
           </div>
           <div className="l-pipeline">
-            <span className="stage done">factos</span>
-            <span className="stage live">regras</span>
+            <span className="stage">factos</span>
+            <span className="stage">regras</span>
             <span className="stage">ordenacao</span>
             <span className="stage">justificacao</span>
           </div>
         </div>
-        <FooterNav onBack={onBack} meta="passo v de v - recomendacao" />
+        <FooterNav onBack={onBack} />
       </div>
     )
   }
@@ -177,7 +185,7 @@ export default function StepResultados({
       <div className="step">
         <div className="results-head">
           <div className="display">
-            <em>Erro</em> na recomendacao.
+            <em>Erro</em> na recomendação.
           </div>
         </div>
         <div className="error-shell">
@@ -188,7 +196,6 @@ export default function StepResultados({
           onBack={onBack}
           onNext={onRestart}
           nextLabel="recomecar"
-          meta="passo v de v - recomendacao"
         />
       </div>
     )
@@ -200,7 +207,7 @@ export default function StepResultados({
         <div className="loading-shell">
           <div className="l-title">A preparar...</div>
         </div>
-        <FooterNav onBack={onBack} meta="passo v de v - recomendacao" />
+        <FooterNav onBack={onBack} />
       </div>
     )
   }
@@ -225,7 +232,6 @@ export default function StepResultados({
           onBack={onBack}
           onNext={onRestart}
           nextLabel="nova consulta"
-          meta="passo v de v - recomendacao"
         />
       </div>
     )
@@ -265,7 +271,7 @@ export default function StepResultados({
             className="btn"
             onClick={() => setViewMode('single')}
           >
-            &larr; voltar a recomendacao
+            &larr; voltar à recomendação
           </button>
         </div>
 
@@ -273,7 +279,6 @@ export default function StepResultados({
           onBack={onBack}
           onNext={onRestart}
           nextLabel="nova consulta"
-          meta="passo v de v - recomendacao"
         />
       </div>
     )
@@ -283,7 +288,7 @@ export default function StepResultados({
     <div className="step">
       <div className="results-head">
         <div className="display">
-          Recomendacao
+          Recomendação
           <br />
           <em>#{currentIdx + 1}</em>
         </div>
@@ -302,7 +307,7 @@ export default function StepResultados({
           disabled={!hasNext}
         >
           {hasNext
-            ? 'proxima recomendacao'
+            ? 'próxima recomendação'
             : 'fim das obras'}
         </button>
         <button
@@ -318,7 +323,7 @@ export default function StepResultados({
             className="btn btn-ghost"
             onClick={() => setCurrentIdx(0)}
           >
-            voltar a primeira
+            voltar à primeira
           </button>
         )}
       </div>
@@ -326,10 +331,7 @@ export default function StepResultados({
       {/* LLM justification */}
       <div className="justif">
         <div className="justif-head">
-          <span className="j-title">Comentario - sobre esta obra</span>
-          <span className="j-attr">
-            gerado por LLM - revisivel pelo professor
-          </span>
+          <span className="j-title">Comentário sobre esta obra</span>
         </div>
         <div className="justif-body">
           {current.justification ? (
@@ -353,39 +355,13 @@ export default function StepResultados({
         </button>
 
         {showInference && (
-          <div className="inference-panel" style={{ textAlign: 'left' }}>
-            <h4>Rules fired — {current.workName}</h4>
-            <div className="work-block">
-              <div className="wb-head">
-                <span className="wb-name">
-                  {current.workName}
-                  <span className="wb-diff">
-                    {' '}
-                    — difficulty {current.difficulty}/6
-                  </span>
-                </span>
-                <span className="wb-score">
-                  score - {current.score.toFixed(3)}
-                </span>
-              </div>
-              {current.firedRules?.map((r, i) => (
-                <div key={i} className="rule-row">
-                  {typeof r === 'string' ? (
-                    <span className="r-id" style={{ gridColumn: '1 / -1' }}>{r}</span>
-                  ) : (
-                    <>
-                      <span className="r-id">{r.id}</span>
-                      <span className="r-desc">{r.desc}</span>
-                      <span className="r-cf">
-                        {r.cf > 0 ? '+' : ''}
-                        {r.cf.toFixed(2)}
-                      </span>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <InferencePanel
+            firedRules={current.firedRules}
+            workName={current.workName}
+            initialScore={current.initialScore}
+            score={current.score}
+            state={state}
+          />
         )}
       </div>
 
@@ -393,8 +369,131 @@ export default function StepResultados({
         onBack={onBack}
         onNext={onRestart}
         nextLabel="nova consulta"
-        meta="passo v de v - recomendacao"
       />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Inference panel — shows fired rules grouped by category with full context
+// ---------------------------------------------------------------------------
+
+const RULE_DESCRIPTIONS = {
+  'skill REFERENCE': 'obra de referência',
+  'skill HIGH': 'muito recomendada',
+  'skill MEDIUM_HIGH': 'recomendada',
+  'skill MEDIUM': 'adequada',
+  'skill MEDIUM_LOW': 'pouco adequada',
+  'skill LOW': 'desaconselhada',
+  'skill AVOID': 'a evitar',
+  'accompaniment match': 'preferência correspondida',
+  'era penalty': 'penalização por repetição de época',
+}
+
+const CATEGORY_HEADERS = {
+  SKILL: { label: 'Competências' },
+  ACCOMPANIMENT: { label: 'Acompanhamento' },
+  ERA: { label: 'Época' },
+  OTHER: { label: 'Outras regras' },
+}
+
+function translateDetail(category, detail) {
+  if (!detail) return null
+  if (category === 'SKILL') {
+    const comp = COMP_BY_ID[detail]
+    return comp ? `${comp.groupTitle} — ${comp.label}` : detail
+  }
+  if (category === 'ACCOMPANIMENT') {
+    return ACOMPANHAMENTOS.find((a) => a.id === detail)?.label || detail
+  }
+  if (category === 'ERA') {
+    return EPOCAS.find((e) => e.id === detail)?.label || detail
+  }
+  return detail
+}
+
+function InferencePanel({ firedRules, workName, initialScore, score, state }) {
+  if (!firedRules || firedRules.length === 0) {
+    return (
+      <div className="inf-panel">
+        <div className="inf-empty">
+          Nenhuma regra disparada para esta obra.
+        </div>
+      </div>
+    )
+  }
+
+  const rules = firedRules.filter((r) => typeof r === 'object')
+  if (rules.length === 0) {
+    return (
+      <div className="inf-panel">
+        <div className="inf-empty">
+          Dados de regras indisponíveis.
+        </div>
+      </div>
+    )
+  }
+
+  const nivelLabel = NIVEIS.find((n) => n.id === state.nivelAluno)?.label || state.nivelAluno
+  const motivLabel = state.motivacao
+    ? MOTIVACOES.find((m) => m.id === state.motivacao)?.label.toLowerCase()
+    : 'neutra'
+
+  // group by category
+  const grouped = {}
+  for (const r of rules) {
+    const cat = r.category || 'OTHER'
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(r)
+  }
+
+  return (
+    <div className="inf-panel">
+      <div className="inf-head">
+        <span className="inf-head-label">regras aplicadas</span>
+        <span className="inf-head-score">score {score.toFixed(2)}</span>
+        <span className="inf-head-work">{workName}</span>
+      </div>
+
+      {initialScore != null && (
+        <div className="inf-cat">
+          <div className="inf-cat-head">adequação difusa</div>
+          <div className="inf-rule">
+            <span className="inf-rule-subject">
+              nível {nivelLabel.toLowerCase()} &middot; motivação {motivLabel}
+            </span>
+            <span className="inf-rule-desc" />
+            <span className="inf-rule-cf pos">{initialScore.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
+
+      {Object.entries(grouped).map(([category, catRules]) => {
+        const header = CATEGORY_HEADERS[category] || CATEGORY_HEADERS.OTHER
+        return (
+          <div key={category} className="inf-cat">
+            <div className="inf-cat-head">{header.label}</div>
+            {catRules.map((r, i) => {
+              const detailLabel = translateDetail(category, r.detail)
+              const desc = RULE_DESCRIPTIONS[r.name] || r.name
+              const positive = r.cf >= 0
+              return (
+                <div key={i} className="inf-rule">
+                  <span className="inf-rule-subject">
+                    {detailLabel || desc}
+                  </span>
+                  <span className="inf-rule-desc">
+                    {detailLabel ? desc : ''}
+                  </span>
+                  <span className={`inf-rule-cf ${positive ? 'pos' : 'neg'}`}>
+                    {positive ? '+' : ''}{r.cf.toFixed(2)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
     </div>
   )
 }

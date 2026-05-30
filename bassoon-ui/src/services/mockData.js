@@ -19,10 +19,11 @@ export const MOCK_RESPONSE = {
       justification:
         'Sobe a fasquia ao colocar o aluno em dialogo com orquestra. A motivacao alta justifica a passagem para a faixa superior de dificuldade, mas atencao: o sistema sinaliza dependencia pedagogica da Sonata Wq. 132.',
       firedRules: [
-        { id: 'R1.2', cf: 0.72, desc: 'Nivel intermedio -> faixa de dificuldade 3-4' },
-        { id: 'R2', cf: 0.6, desc: 'Motivacao alta -> desloca faixa para cima' },
-        { id: 'R4.ALTA', cf: 0.7, desc: 'Trabalha fortemente LEGATO' },
-        { id: 'R4.MEDIA', cf: 0.3, desc: 'Contribui para INTONATION' },
+        { name: 'skill REFERENCE', cf: 0.85, category: 'SKILL', detail: 'LEGATO' },
+        { name: 'skill HIGH', cf: 0.7, category: 'SKILL', detail: 'STACCATO' },
+        { name: 'skill MEDIUM', cf: 0.3, category: 'SKILL', detail: 'LOW_REGISTER' },
+        { name: 'accompaniment match', cf: 0.3, category: 'ACCOMPANIMENT', detail: 'ORCHESTRA' },
+        { name: 'era penalty', cf: -0.3, category: 'ERA', detail: 'ROMANTIC' },
       ],
     },
     {
@@ -38,10 +39,8 @@ export const MOCK_RESPONSE = {
       justification:
         'Introduz o desafio do staccato contemporaneo. Foi penalizada por partilhar periodo com a ultima obra estudada, mas a sua relevancia tecnica para staccato manteve-a entre as escolhas viaveis.',
       firedRules: [
-        { id: 'R1.2', cf: 0.72, desc: 'Nivel intermedio -> faixa de dificuldade 3-4' },
-        { id: 'R2', cf: 0.6, desc: 'Motivacao alta -> desloca faixa para cima' },
-        { id: 'R4.ALTA', cf: 0.7, desc: 'Trabalha fortemente STACCATO' },
-        { id: 'R6', cf: -0.75, desc: 'Penalizacao: periodo diferente do ultimo estudado' },
+        { name: 'skill HIGH', cf: 0.7, category: 'SKILL', detail: 'STACCATO' },
+        { name: 'skill MEDIUM', cf: 0.3, category: 'SKILL', detail: 'DYNAMICS' },
       ],
     },
     {
@@ -57,9 +56,9 @@ export const MOCK_RESPONSE = {
       justification:
         'Alternativa romantica acessivel, sem pre-requisitos, com piano. Trabalha o legato com um vocabulario lirico distinto do das obras alemas.',
       firedRules: [
-        { id: 'R1.2', cf: 0.72, desc: 'Nivel intermedio -> faixa de dificuldade 3-4' },
-        { id: 'R4.ALTA', cf: 0.7, desc: 'Trabalha fortemente LEGATO' },
-        { id: 'R4.MEDIA', cf: 0.3, desc: 'Contribui para INTONATION' },
+        { name: 'skill HIGH', cf: 0.7, category: 'SKILL', detail: 'LEGATO' },
+        { name: 'skill MEDIUM', cf: 0.3, category: 'SKILL', detail: 'INTONATION' },
+        { name: 'accompaniment match', cf: 0.3, category: 'ACCOMPANIMENT', detail: 'PIANO' },
       ],
     },
     {
@@ -75,9 +74,8 @@ export const MOCK_RESPONSE = {
       justification:
         'Opcao barroca com baixo continuo, na faixa baixa do nivel intermedio. Util se o aluno precisar de consolidar o staccato num enquadramento estilistico mais transparente.',
       firedRules: [
-        { id: 'R1.2', cf: 0.72, desc: 'Nivel intermedio -> faixa de dificuldade 3-4' },
-        { id: 'R4.ALTA', cf: 0.7, desc: 'Trabalha fortemente STACCATO' },
-        { id: 'R4.MEDIA', cf: 0.3, desc: 'Contribui para LEGATO' },
+        { name: 'skill HIGH', cf: 0.7, category: 'SKILL', detail: 'STACCATO' },
+        { name: 'skill MEDIUM', cf: 0.3, category: 'SKILL', detail: 'LEGATO' },
       ],
     },
     {
@@ -93,10 +91,8 @@ export const MOCK_RESPONSE = {
       justification:
         'Pilar do repertorio classico para fagote. Exige maturidade no legato e nas dinamicas, e a faixa de dificuldade encosta ao limite do nivel.',
       firedRules: [
-        { id: 'R1.2', cf: 0.72, desc: 'Nivel intermedio -> faixa de dificuldade 3-4' },
-        { id: 'R2', cf: 0.6, desc: 'Motivacao alta -> desloca faixa para cima' },
-        { id: 'R4.REFERENCIA', cf: 1.0, desc: 'Obra de referencia para LEGATO' },
-        { id: 'R4.MEDIA', cf: 0.3, desc: 'Contribui para DYNAMICS' },
+        { name: 'skill REFERENCE', cf: 0.85, category: 'SKILL', detail: 'LEGATO' },
+        { name: 'skill MEDIUM', cf: 0.3, category: 'SKILL', detail: 'DYNAMICS' },
       ],
     },
     {
@@ -112,9 +108,9 @@ export const MOCK_RESPONSE = {
       justification:
         'Material barroco vivo, com passagens em staccato e ornamentacao idiomatica. Pode servir como exercicio preparatorio para escrita virtuosistica do barroco italiano.',
       firedRules: [
-        { id: 'R1.2', cf: 0.72, desc: 'Nivel intermedio -> faixa de dificuldade 3-4' },
-        { id: 'R4.ALTA', cf: 0.7, desc: 'Trabalha fortemente STACCATO' },
-        { id: 'R4.MEDIA', cf: 0.3, desc: 'Contribui para ORNAMENTATION' },
+        { name: 'skill HIGH', cf: 0.7, category: 'SKILL', detail: 'STACCATO' },
+        { name: 'skill MEDIUM', cf: 0.3, category: 'SKILL', detail: 'ORNAMENTATION' },
+        { name: 'era penalty', cf: -0.3, category: 'ERA', detail: 'BAROQUE' },
       ],
     },
   ],

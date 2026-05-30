@@ -20,20 +20,13 @@ import org.sibac.bassoon.cf.TrackingAgendaListener;
 //   partial CF = cf(skill Evidence) * @CF
 // Work has no CF (catalog data is certain), so it does not enter the minimum.
 //
-// CFs per level:
-//   REFERENCE -> @CF(1.0)   reference work for this skill
-//   HIGH      -> @CF(0.7)   highly recommended
-//   MEDIUM    -> @CF(0.3)   works the skill, but better choices exist
-//   NONE      -> @CF(-0.5)  advised against (penalises)
-//   LOW       -> no rule    (CF=0, does not contribute)
-//
 // Drools note: avoid "description in (...)" with enum constants and avoid
 // casts inside constraints (getSkillLevel((Skill)$skill)). Both trip up the
 // parser. Use "||" and the method Work.skillLevelFor(Object) instead.
 // =====================================================================
 
 rule "skill REFERENCE"
-@CF(1.0)
+@CF(0.8)
 lock-on-active true
 when
     Evidence( description == EvidenceType.SKILL_1
@@ -47,7 +40,7 @@ then
 end
 
 rule "skill HIGH"
-@CF(0.7)
+@CF(0.5)
 lock-on-active true
 when
     Evidence( description == EvidenceType.SKILL_1
@@ -60,8 +53,22 @@ then
     $h.update();
 end
 
-rule "skill MEDIUM"
+rule "skill MEDIUM_HIGH"
 @CF(0.3)
+lock-on-active true
+when
+    Evidence( description == EvidenceType.SKILL_1
+              || description == EvidenceType.SKILL_2
+              || description == EvidenceType.SKILL_3,
+              $skill : value )
+    Work( $name : name, skillLevelFor($skill) == SkillLevel.MEDIUM_HIGH )
+then
+    Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
+    $h.update();
+end
+
+rule "skill MEDIUM"
+@CF(0.1)
 lock-on-active true
 when
     Evidence( description == EvidenceType.SKILL_1
@@ -74,15 +81,43 @@ then
     $h.update();
 end
 
-rule "skill NONE"
-@CF(-0.5)
+rule "skill MEDIUM_LOW"
+@CF(-0.1)
 lock-on-active true
 when
     Evidence( description == EvidenceType.SKILL_1
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.NONE )
+    Work( $name : name, skillLevelFor($skill) == SkillLevel.MEDIUM_LOW )
+then
+    Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
+    $h.update();
+end
+
+rule "skill LOW"
+@CF(-0.4)
+lock-on-active true
+when
+    Evidence( description == EvidenceType.SKILL_1
+              || description == EvidenceType.SKILL_2
+              || description == EvidenceType.SKILL_3,
+              $skill : value )
+    Work( $name : name, skillLevelFor($skill) == SkillLevel.LOW )
+then
+    Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
+    $h.update();
+end
+
+rule "skill AVOID"
+@CF(-0.8)
+lock-on-active true
+when
+    Evidence( description == EvidenceType.SKILL_1
+              || description == EvidenceType.SKILL_2
+              || description == EvidenceType.SKILL_3,
+              $skill : value )
+    Work( $name : name, skillLevelFor($skill) == SkillLevel.AVOID )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();

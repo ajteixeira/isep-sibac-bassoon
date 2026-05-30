@@ -23,12 +23,12 @@ const INITIAL_STATE = {
 }
 
 const STEP_NAMES = [
-  'Nivel',
-  'Competencias',
-  'Motivacao',
+  'Nível',
+  'Motivação',
+  'Competências',
   'Acompanhamento',
-  'Periodo',
-  'Recomendacao',
+  'Período',
+  'Recomendação',
 ]
 
 export default function App() {
@@ -50,10 +50,10 @@ export default function App() {
       setResults(data)
     } catch (e) {
       setError({
-        title: 'Erro de comunicacao',
+        title: 'Erro de comunicação',
         message:
           e.message ||
-          'Nao foi possivel ligar ao bassoon-api. Verifica se esta a correr em localhost:8080.',
+          'Não foi possível contactar o sistema de recomendação. Tenta novamente daqui a pouco.',
       })
     } finally {
       setLoading(false)
@@ -79,14 +79,14 @@ export default function App() {
         return <StepNivel state={state} set={set} onNext={() => setStep(1)} />
       case 1:
         return (
-          <StepCompetencias
+          <StepMotivacao
             state={state} set={set}
             onBack={() => setStep(0)} onNext={() => setStep(2)}
           />
         )
       case 2:
         return (
-          <StepMotivacao
+          <StepCompetencias
             state={state} set={set}
             onBack={() => setStep(1)} onNext={() => setStep(3)}
           />

@@ -36,15 +36,23 @@ export async function recommend(state) {
 
   const body = buildRequest(state)
 
-  const res = await fetch(API_BASE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+  let res
+  try {
+    res = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new Error(
+      'Não foi possível contactar o sistema de recomendação. Tenta novamente daqui a pouco.'
+    )
+  }
 
   if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(text || `HTTP ${res.status}`)
+    throw new Error(
+      'O sistema encontrou um problema ao processar o pedido. Tenta novamente.'
+    )
   }
 
   return res.json()

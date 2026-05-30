@@ -78,6 +78,23 @@ public class TrackingAgendaListener implements AgendaEventListener {
   }
 
   /**
+   * Extracts the domain detail from the current LHS activations.
+   *
+   * <p>Looks for an {@code Evidence} fact in the activations and returns its value
+   * (e.g. the {@code Skill}, {@code Accompaniment}, or {@code Era} name).
+   * Returns {@code null} if no relevant evidence is found.
+   */
+  public static String extractDetail() {
+    for (Object fact : activations) {
+      if (fact instanceof org.sibac.bassoon.model.Evidence evidence
+          && evidence.getValue() != null) {
+        return evidence.getValue().toString();
+      }
+    }
+    return null;
+  }
+
+  /**
    * Returns the minimum CF among the LHS facts that carry a CF (weakest-link rule).
    * Ignores the conclusion itself and facts without CF (e.g. {@code Work}).
    * Returns 1.0 if no CF-carrying facts are present (deterministic rule).

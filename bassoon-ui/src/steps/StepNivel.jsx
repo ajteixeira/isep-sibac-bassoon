@@ -9,15 +9,18 @@ export default function StepNivel({ state, set, onNext }) {
   return (
     <div className="step">
       <div className="display">
-        Em que nivel
+        Em que <em>nível</em>
         <br />
-        esta <em>o aluno</em>?
+        está o aluno?
+      </div>
+      <div className="subtitle">
+        Indica o nível do aluno para definir a faixa de dificuldade das obras
       </div>
 
       <div className="field">
         <div className="field-head">
-          <span className="q">i. nivel</span>
-          <span className="section-label">obrigatorio</span>
+          <span className="q">nível</span>
+          <span className="section-label">obrigatório</span>
         </div>
         <RadioRow
           options={NIVEIS}
@@ -29,7 +32,6 @@ export default function StepNivel({ state, set, onNext }) {
       <FooterNav
         onNext={onNext}
         nextDisabled={!canAdvance}
-        meta="passo i de vi - nivel"
       />
     </div>
   )

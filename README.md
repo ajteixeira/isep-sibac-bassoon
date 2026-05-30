@@ -94,6 +94,19 @@ Stop: `docker compose down`
 
 ---
 
+## Useful commands
+
+### View fuzzy function charts
+
+```bash
+mvn exec:java -pl bassoon-engine -Dexec.mainClass="org.sibac.bassoon.fuzzy.FuzzyChartGenerator"
+```
+
+Opens JFuzzyChart windows showing the membership functions of `suitability.fcl`
+(student level, work difficulty, and the 9-rule output surfaces).
+
+---
+
 ## Project structure
 
 ```

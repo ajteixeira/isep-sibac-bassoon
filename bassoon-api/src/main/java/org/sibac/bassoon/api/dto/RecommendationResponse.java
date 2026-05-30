@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.sibac.bassoon.model.Accompaniment;
 import org.sibac.bassoon.model.Era;
+import org.sibac.bassoon.output.FiredRule;
 
 /**
  * JSON response body for POST /recommend.
@@ -22,6 +23,7 @@ public class RecommendationResponse {
   @Data
   @NoArgsConstructor
   public static class RecommendedWork {
+    private double workId;
     private String workName;
     private String composer;
     private Era era;
@@ -31,7 +33,8 @@ public class RecommendationResponse {
     private double score;
     private String videoLink;
     private String prerequisite;
-    private List<String> firedRules;
+    private double initialScore;
+    private List<FiredRule> firedRules;
     private String justification;
   }
 }

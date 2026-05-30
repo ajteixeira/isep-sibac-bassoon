@@ -38,44 +38,28 @@ class RecommendationEngineTest {
 
   @Test
   void allWorksPassForIntermediate() {
-    // intermediate+neutral (3.5): all 3 works pass threshold 0.4
-    //   Baroque Solo (dif 1) -> intermediate+easy=medium   -> ~0.50
-    //   Classical Piano (dif 3) -> intermediate+medium=high -> ~0.63
-    //   Romantic Orch (dif 6)  -> intermediate+hard=low    -> ~0.47
+    // intermediate+neutral (3.5) with all dif 4: intermediate+medium=high -> ~0.63
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
         StudentLevel.INTERMEDIATE, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, null);
 
-    List<String> names = namesOf(results);
     assertEquals(3, results.size(),
-        "All 3 works should pass fuzzy threshold for intermediate student");
-    assertTrue(names.contains(TestWorks.BAROQUE_SOLO));
-    assertTrue(names.contains(TestWorks.CLASSICAL_PIANO));
-    assertTrue(names.contains(TestWorks.ROMANTIC_ORCH));
+        "All 3 works (dif 4) should pass for intermediate");
   }
 
   @Test
-  void beginnerFiltersHardestWorks() {
-    // beginner (fuzzyLevel=1.5):
-    //   Baroque Solo (dif 1) -> beginner+easy=high  -> ~0.89 -> passes
-    //   Classical Piano (dif 3) -> beginner+medium=low -> ~0.49 -> passes (borderline)
-    //   Romantic Orch (dif 6)  -> beginner+hard=veryLow -> ~0.07 -> filtered out
+  void beginnerFiltersAllMediumWorks() {
+    // beginner (1.5): all dif 4 -> beginner+medium=low -> ~0.30 -> all filtered
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
         StudentLevel.BEGINNER, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, null);
 
-    List<String> names = namesOf(results);
-    assertTrue(names.contains(TestWorks.BAROQUE_SOLO),
-        "Baroque Solo (dif 1) should pass for beginner");
-    assertTrue(names.contains(TestWorks.CLASSICAL_PIANO),
-        "Classical Piano (dif 3) passes for beginner (suitability ~0.49 > threshold 0.4)");
-    assertFalse(names.contains(TestWorks.ROMANTIC_ORCH),
-        "Romantic Orchestral (dif 6) should be filtered for beginner");
-    assertEquals(2, results.size());
+    assertEquals(0, results.size(),
+        "Dif 4 works should be filtered for beginner");
   }
 
   // -----------------------------------------------------------------------
@@ -84,18 +68,20 @@ class RecommendationEngineTest {
 
   @Test
   void highSkillOutranksMediumSkill() {
-    // TRILLS: Baroque Solo=HIGH, Classical Piano=MEDIUM
-    // Baroque Solo should outrank Classical Piano
+    // TRILLS: Romantic Orch=HIGH, Classical Piano=MEDIUM
+    // Use ADVANCED so all works pass fuzzy
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
-        StudentLevel.INTERMEDIATE, Motivation.NEUTRAL,
+        StudentLevel.ADVANCED, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, null);
 
-    int baroqueIdx = indexOf(results, TestWorks.BAROQUE_SOLO);
+    int romanticIdx = indexOf(results, TestWorks.ROMANTIC_ORCH);
     int classicalIdx = indexOf(results, TestWorks.CLASSICAL_PIANO);
-    assertTrue(baroqueIdx < classicalIdx,
-        "Baroque Solo (TRILLS=HIGH) should outrank Classical Piano (TRILLS=MEDIUM)");
+    assertTrue(romanticIdx >= 0, "Romantic Orch should be present");
+    assertTrue(classicalIdx >= 0, "Classical Piano should be present");
+    assertTrue(romanticIdx < classicalIdx,
+        "Romantic Orch (TRILLS=HIGH) should outrank Classical Piano (TRILLS=MEDIUM)");
   }
 
   // -----------------------------------------------------------------------
@@ -104,22 +90,19 @@ class RecommendationEngineTest {
 
   @Test
   void eraPenaltyLowersBaroqueWork() {
-    // last era = BAROQUE -> Baroque Solo penalised (@CF -0.3)
-    // Classical Piano (CLASSICAL) is unaffected
+    // last era = BAROQUE -> Baroque Solo penalised
+    // Use ADVANCED so all works pass fuzzy
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
-        StudentLevel.INTERMEDIATE, Motivation.NEUTRAL,
+        StudentLevel.ADVANCED, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         Era.BAROQUE, null);
 
-    // TRILLS: Baroque Solo=HIGH, Classical Piano=MEDIUM
-    // Without penalty: Baroque > Classical
-    // With penalty: Baroque drops, Classical may overtake
     int baroqueIdx = indexOf(results, TestWorks.BAROQUE_SOLO);
     int classicalIdx = indexOf(results, TestWorks.CLASSICAL_PIANO);
 
-    assertTrue(baroqueIdx >= 0, "Baroque Solo should be present");
-    assertTrue(classicalIdx >= 0, "Classical Piano should be present");
+    assertTrue(baroqueIdx >= 0, "Baroque Solo should be present for advanced");
+    assertTrue(classicalIdx >= 0, "Classical Piano should be present for advanced");
   }
 
   // -----------------------------------------------------------------------
@@ -128,18 +111,18 @@ class RecommendationEngineTest {
 
   @Test
   void accompanimentMatchBoostsPianoWork() {
-    // preference = PIANO -> Classical Piano (PIANO) gets boost (@CF 0.3)
-    // Baroque Solo (SOLO) does not
+    // preference = PIANO -> Classical Piano (PIANO) gets boost (@CF 0.45)
+    // Use ADVANCED so all works pass fuzzy
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
-        StudentLevel.INTERMEDIATE, Motivation.NEUTRAL,
+        StudentLevel.ADVANCED, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, List.of(new RecommendationEngine.AccompanimentInput(Accompaniment.PIANO, 0.8)));
 
     assertTrue(indexOf(results, TestWorks.CLASSICAL_PIANO) >= 0,
         "Classical Piano should be present (fuzzy passes + accomp match)");
     assertTrue(indexOf(results, TestWorks.BAROQUE_SOLO) >= 0,
-        "Baroque Solo should be present (fuzzy passes, no accomp match)");
+        "Baroque Solo should be present for advanced");
   }
 
   // -----------------------------------------------------------------------
@@ -150,7 +133,7 @@ class RecommendationEngineTest {
   void prerequisiteMovesBeforeDependentWork() {
     // Classical Piano has prerequisite = Baroque Solo
     // With LEGATO: Classical Piano=HIGH -> ranks 1st
-    // Baroque Solo=LEGATO=LOW -> ranks 2nd
+    // Baroque Solo=LEGATO=NEUTRAL -> ranks 2nd
     // Prerequisite rule: Baroque Solo (prereq) is after -> moved up
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),

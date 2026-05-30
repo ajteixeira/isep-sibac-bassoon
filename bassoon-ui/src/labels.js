@@ -3,29 +3,29 @@
 // ---------------------------------------------------------------------------
 
 export const NIVEIS = [
-  { id: 'BEGINNER',    label: 'Iniciante',  desc: 'Pouca autonomia - acompanhamento proximo' },
-  { id: 'INTERMEDIATE', label: 'Intermedio', desc: 'Em construcao - repertorio consolidado' },
-  { id: 'ADVANCED',    label: 'Avancado',   desc: 'Autonomia plena - capacidade de recital' },
+  { id: 'BEGINNER',    label: 'Iniciante' },
+  { id: 'INTERMEDIATE', label: 'Intermédio' },
+  { id: 'ADVANCED',    label: 'Avançado' },
 ]
 
 export const MOTIVACOES = [
-  { id: 'LOW',     label: 'Baixa',  desc: 'Precisa de repertorio acessivel' },
-  { id: 'NEUTRAL', label: 'Neutra', desc: 'Sem ajuste na dificuldade' },
-  { id: 'HIGH',    label: 'Alta',   desc: 'Aceita repertorio exigente' },
+  { id: 'LOW',     label: 'Baixa' },
+  { id: 'NEUTRAL', label: 'Neutra' },
+  { id: 'HIGH',    label: 'Alta' },
 ]
 
 export const EPOCAS = [
   { id: 'BAROQUE',      label: 'Barroco',       years: 'c. 1600-1750' },
-  { id: 'CLASSICAL',    label: 'Classico',      years: 'c. 1750-1820' },
-  { id: 'ROMANTIC',     label: 'Romantico',     years: 'c. 1820-1910' },
-  { id: 'CONTEMPORARY', label: 'Contemporaneo', years: '1910 - hoje' },
+  { id: 'CLASSICAL',    label: 'Clássico',      years: 'c. 1750-1820' },
+  { id: 'ROMANTIC',     label: 'Romântico',     years: 'c. 1820-1910' },
+  { id: 'CONTEMPORARY', label: 'Contemporâneo', years: '1910 - hoje' },
   { id: 'OTHER',        label: 'Outro',         years: 'indefinido' },
 ]
 
 export const COMP_GROUPS = [
   {
     id: 'articulacao',
-    title: 'Articulacao',
+    title: 'Articulação',
     items: [
       { id: 'LEGATO',   label: 'Legato' },
       { id: 'STACCATO', label: 'Staccato' },
@@ -36,18 +36,18 @@ export const COMP_GROUPS = [
     title: 'Registo',
     items: [
       { id: 'LOW_REGISTER',      label: 'Grave' },
-      { id: 'MID_REGISTER',      label: 'Medio' },
+      { id: 'MID_REGISTER',      label: 'Médio' },
       { id: 'HIGH_REGISTER',      label: 'Agudo' },
       { id: 'VERY_HIGH_REGISTER', label: 'Sobreagudo' },
     ],
   },
   {
     id: 'tempo',
-    title: 'Tempo de execucao',
+    title: 'Tempo de execução',
     items: [
       { id: 'SLOW_TEMPO',     label: 'Lento' },
       { id: 'MODERATE_TEMPO', label: 'Moderado' },
-      { id: 'FAST_TEMPO',     label: 'Rapido' },
+      { id: 'FAST_TEMPO',     label: 'Rápido' },
       { id: 'VIRTUOSO_TEMPO', label: 'Virtuoso' },
     ],
   },
@@ -55,37 +55,37 @@ export const COMP_GROUPS = [
     id: 'som',
     title: 'Controlo do som',
     items: [
-      { id: 'ENDURANCE',      label: 'Resistencia' },
+      { id: 'ENDURANCE',      label: 'Resistência' },
       { id: 'SOUND_QUALITY',  label: 'Qualidade do som' },
       { id: 'FLEXIBILITY',    label: 'Flexibilidade' },
-      { id: 'INTONATION',     label: 'Afinacao' },
-      { id: 'DYNAMICS',       label: 'Dinamicas' },
+      { id: 'INTONATION',     label: 'Afinação' },
+      { id: 'DYNAMICS',       label: 'Dinâmicas' },
     ],
   },
   {
     id: 'desafios',
-    title: 'Desafios tecnicos',
+    title: 'Desafios técnicos',
     items: [
-      { id: 'COORDINATION',            label: 'Coordenacao' },
+      { id: 'COORDINATION',            label: 'Coordenação' },
       { id: 'FLICKING',                label: 'Flicking' },
       { id: 'TRILLS',                  label: 'Trilos' },
-      { id: 'ORNAMENTATION',           label: 'Ornamentacao' },
+      { id: 'ORNAMENTATION',           label: 'Ornamentação' },
       { id: 'HALF_HOLE_TECHNIQUE',     label: 'Meio-buraco' },
-      { id: 'CONTEMPORARY_TECHNIQUES', label: 'Tecnicas contemporaneas' },
+      { id: 'CONTEMPORARY_TECHNIQUES', label: 'Tecnicas contemporâneas' },
     ],
   },
   {
     id: 'ritmo',
     title: 'Ritmo',
     items: [
-      { id: 'RHYTHMIC_COMPLEXITY', label: 'Complexidade ritmica' },
+      { id: 'RHYTHMIC_COMPLEXITY', label: 'Complexidade rítmica' },
     ],
   },
   {
     id: 'caracter',
-    title: 'Caracter',
+    title: 'Carácter',
     items: [
-      { id: 'TECHNICAL_CHARACTER', label: 'Tecnico' },
+      { id: 'TECHNICAL_CHARACTER', label: 'Técnico' },
       { id: 'EXPRESSIVE_CHARACTER', label: 'Expressivo' },
     ],
   },
@@ -94,7 +94,7 @@ export const COMP_GROUPS = [
 export const ACOMPANHAMENTOS = [
   { id: 'SOLO',           label: 'Solo' },
   { id: 'PIANO',          label: 'Piano' },
-  { id: 'BASSO_CONTINUO', label: 'Baixo continuo' },
+  { id: 'BASSO_CONTINUO', label: 'Baixo contínuo' },
   { id: 'ORCHESTRA',      label: 'Orquestra' },
 ]
 

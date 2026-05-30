@@ -129,6 +129,48 @@ END_DEFUZZIFY
 `METHOD : COG` significa que a saida final e o centro de gravidade da area resultante das regras.
 Na pratica e uma media ponderada que produz um numero suave, sem saltos. E o metodo mais comum.
 
+#### Metodos de defuzzificacao: COG vs MOM vs BOA
+
+Apos as regras dispararem, tens uma **area fuzzy acumulada** — figuras clipadas dos termos de
+saida (little, medium, much, etc.) sobrepostas. E preciso extrair um unico numero crisp. Ha
+3 metodos principais:
+
+**COG — Centre of Gravity (o que o professor usou)**
+
+\[ COG = \frac{\int x \cdot \mu(x)\,dx}{\int \mu(x)\,dx} \]
+
+E o **centro de massa** da figura acumulada. Pondera cada contribuicao pela sua area: uma regra
+que disparou com grau 0.8 pesa mais no resultado do que uma que disparou com 0.3.
+
+- ✅ Suave e continuo — pequenas mudancas nas entradas dao pequenas mudancas na saida
+- ✅ Sensivel a **todas** as regras que dispararam e com que intensidade
+- ✅ Interpretacao fisica direta (centro de massa)
+
+**MOM — Mean of Maxima**
+
+Pega apenas nos pontos onde µ(x) atinge o **maximo global** da figura acumulada e faz a media.
+
+- ❌ Ignora completamente a forma da area — so olha para o topo
+- ❌ Pode dar saltos bruscos (ex.: duas regras com picos iguais em zonas opostas dao uma media
+  que nao corresponde a nenhuma delas)
+- ❌ Se low dispara a 0.5 e high dispara a 0.5, o MOM da ~0.6 (medium) — o que nao faz sentido
+
+**BOA — Bisector of Area**
+
+Encontra o ponto x onde a area a esquerda = area a direita.
+
+\[ \int_{0}^{x} \mu(z)\,dz = \int_{x}^{1} \mu(z)\,dz \]
+
+- ⚠️ Para figuras simetricas, BOA = COG
+- ⚠️ Para figuras assimetricas, o BOA tende a puxar para o lado menos disperso, o COG para o
+  lado com mais massa — o COG e geralmente mais intuitivo
+- ⚠️ Menos comum na literatura e nas bibliotecas
+
+**Porque o COG foi a escolha certa:** num sistema de adequacao pedagogica, a transicao entre
+"obra adequada" e "obra inadequada" deve ser **suave e continua**. O MOM criaria saltos
+abruptos que penalizariam ou beneficiariam o aluno de forma artificial. O BOA e raramente usado.
+O COG e o padrao em sistemas Mamdani e o que o professor usou no `prescricao.fcl`.
+
 ### 3.4 Bloco de regras (RULEBLOCK)
 
 ```

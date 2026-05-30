@@ -2,8 +2,8 @@ package org.sibac.bassoon;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +25,7 @@ import org.sibac.bassoon.model.Motivation;
 import org.sibac.bassoon.model.Skill;
 import org.sibac.bassoon.model.StudentLevel;
 import org.sibac.bassoon.model.Work;
+import org.sibac.bassoon.output.FiredRule;
 import org.sibac.bassoon.output.Recommendation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,8 @@ public class RecommendationEngine {
 
   private static final Logger LOG = LoggerFactory.getLogger(RecommendationEngine.class);
 
-  private static final double SUITABILITY_THRESHOLD = 0.4;
+  private static final double SUITABILITY_THRESHOLD = 0.5;
+  private static final double MIN_RECOMMENDATION_SCORE = 0.30;
 
   private final KieContainer kieContainer;
   private final FuzzySuitabilityService fuzzy;
@@ -81,7 +83,7 @@ public class RecommendationEngine {
     kSession.addEventListener(new TrackingAgendaListener());
     kSession.addEventListener(new FactListener());
 
-    Map<String, Work> worksByName = indexByName(catalog);
+    Map<Double, Work> worksById = indexById(catalog);
 
     // --- fuzzy front-end ---
     double fuzzyLevel = StudentLevelMapper.toStudentLevel(level, motivation);
@@ -89,6 +91,7 @@ public class RecommendationEngine {
 
     int inserted = 0;
     int filtered = 0;
+    Map<String, Double> initialScores = new HashMap<>();
 
     for (Work work : catalog) {
       double suitability = fuzzy.suitability(fuzzyLevel, work.getDifficultyLevel().getValue());
@@ -96,6 +99,8 @@ public class RecommendationEngine {
       if (suitability >= SUITABILITY_THRESHOLD) {
         kSession.insert(work);
         kSession.insert(new Hypothesis("candidate", work.getName(), suitability));
+        initialScores.put(work.getName(), suitability);
+        worksById.put(work.getId(), work);
         inserted++;
       } else {
         filtered++;
@@ -156,8 +161,10 @@ public class RecommendationEngine {
       if (!"candidate".equals(h.getDescription())) {
         continue;
       }
-      List<String> firedRules = RuleFiredTracker.getRules(h);
-      recommendations.add(new Recommendation(h.getValue(), h.getCf(),
+      List<FiredRule> firedRules = RuleFiredTracker.getRules(h);
+      double initialScore = initialScores.getOrDefault(h.getValue(), h.getCf());
+      double wid = findIdByName(worksById, h.getValue());
+      recommendations.add(new Recommendation(wid, h.getValue(), h.getCf(), initialScore,
           "CF=" + String.format("%.3f", h.getCf()), firedRules));
     }
 
@@ -166,7 +173,12 @@ public class RecommendationEngine {
     recommendations.sort(Comparator.comparingDouble(Recommendation::getScore).reversed());
 
     // --- prerequisites ---
-    recommendations = applyPrerequisites(recommendations, worksByName);
+    recommendations = applyPrerequisites(recommendations, worksById);
+
+    // --- drop works below minimum score ---
+    recommendations = recommendations.stream()
+        .filter(r -> r.getScore() >= MIN_RECOMMENDATION_SCORE)
+        .collect(Collectors.toList());
 
     kSession.dispose();
     return recommendations;
@@ -177,26 +189,26 @@ public class RecommendationEngine {
   // -----------------------------------------------------------------------
 
   private List<Recommendation> applyPrerequisites(
-      List<Recommendation> ordered, Map<String, Work> catalog) {
+      List<Recommendation> ordered, Map<Double, Work> catalog) {
 
     List<Recommendation> result = new ArrayList<>(ordered);
 
     for (int i = result.size() - 1; i >= 0; i--) {
       Recommendation rec = result.get(i);
-      Work work = catalog.get(rec.getWorkName());
+      Work work = catalog.get(rec.getWorkId());
 
       if (work == null || work.getPrerequisiteId() < 0) {
         continue;
       }
 
-      Work prereq = findWorkById(catalog, work.getPrerequisiteId());
+      Work prereq = catalog.get((double) work.getPrerequisiteId());
       if (prereq == null) {
         LOG.warn("Prerequisite not found: id={} for work {}", work.getPrerequisiteId(),
             work.getName());
         continue;
       }
 
-      Recommendation prereqRec = findByName(result, prereq.getName());
+      Recommendation prereqRec = findById(result, prereq.getId());
       if (prereqRec != null && result.indexOf(prereqRec) > i) {
         result.remove(prereqRec);
         result.add(i, prereqRec);
@@ -211,30 +223,30 @@ public class RecommendationEngine {
   // helpers
   // -----------------------------------------------------------------------
 
-  private static Map<String, Work> indexByName(List<Work> works) {
-    Map<String, Work> map = new HashMap<>();
+  private static Map<Double, Work> indexById(List<Work> works) {
+    Map<Double, Work> map = new HashMap<>();
     for (Work w : works) {
-      map.put(w.getName(), w);
+      map.put(w.getId(), w);
     }
     return map;
   }
 
-  private static Work findWorkById(Map<String, Work> catalog, double id) {
-    for (Work w : catalog.values()) {
-      if (w.getId() == id) {
-        return w;
+  private static Recommendation findById(List<Recommendation> list, double id) {
+    for (Recommendation r : list) {
+      if (r.getWorkId() == id) {
+        return r;
       }
     }
     return null;
   }
 
-  private static Recommendation findByName(List<Recommendation> list, String name) {
-    for (Recommendation r : list) {
-      if (r.getWorkName().equals(name)) {
-        return r;
+  private static double findIdByName(Map<Double, Work> catalog, String name) {
+    for (Work w : catalog.values()) {
+      if (w.getName().equals(name)) {
+        return w.getId();
       }
     }
-    return null;
+    return -1;
   }
 
   // -----------------------------------------------------------------------

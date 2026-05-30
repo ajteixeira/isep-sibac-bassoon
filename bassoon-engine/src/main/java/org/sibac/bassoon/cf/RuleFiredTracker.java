@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.sibac.bassoon.output.FiredRule;
 
 /**
  * Tracks which Drools rules fired for each Hypothesis.
@@ -17,21 +18,28 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class RuleFiredTracker {
 
-  // hypothesis value (work name) -> list of rules that fired
-  private static final Map<String, List<String>> registry = new ConcurrentHashMap<>();
+  // hypothesis value (work name) -> list of fired rules with context
+  private static final Map<String, List<FiredRule>> registry = new ConcurrentHashMap<>();
 
   private RuleFiredTracker() {}
 
-  /** Records that a rule fired for a hypothesis. Called from {@code Hypothesis.update()}. */
+  /**
+   * Records a rule firing for a hypothesis, with the context extracted from the LHS
+   * (which skill, accompaniment, or era triggered the match).
+   */
   public static void record(
-      org.sibac.bassoon.model.Hypothesis hypothesis, String ruleName) {
+      org.sibac.bassoon.model.Hypothesis hypothesis,
+      String ruleName,
+      double ruleCf,
+      String detail) {
+    String category = deriveCategory(ruleName);
     registry
         .computeIfAbsent(hypothesis.getValue(), k -> new ArrayList<>())
-        .add(ruleName);
+        .add(new FiredRule(ruleName, ruleCf, category, detail));
   }
 
   /** Returns the rules that fired for a hypothesis (or an empty list). */
-  public static List<String> getRules(
+  public static List<FiredRule> getRules(
       org.sibac.bassoon.model.Hypothesis hypothesis) {
     return registry.getOrDefault(
         hypothesis.getValue(), Collections.emptyList());
@@ -40,5 +48,21 @@ public final class RuleFiredTracker {
   /** Clears the registry between requests. */
   public static void clear() {
     registry.clear();
+  }
+
+  private static String deriveCategory(String ruleName) {
+    if (ruleName == null) {
+      return "UNKNOWN";
+    }
+    if (ruleName.startsWith("skill")) {
+      return "SKILL";
+    }
+    if (ruleName.equals("accompaniment match")) {
+      return "ACCOMPANIMENT";
+    }
+    if (ruleName.equals("era penalty")) {
+      return "ERA";
+    }
+    return "OTHER";
   }
 }

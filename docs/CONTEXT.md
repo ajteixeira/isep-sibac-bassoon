@@ -65,7 +65,7 @@ DroolsService converte o pedido (DTO) nos inputs do RecommendationEngine
 RecommendationEngine.run(...)  ── o coração do sistema:
    1. StudentLevelMapper: nível + motivação -> valor contínuo no eixo 1..6
    2. FUZZY (suitability.fcl): adequação de cada obra ao aluno -> grau 0..1
-      (threshold 0.4 filtra as obras pouco adequadas)
+      (threshold 0.5 filtra as obras pouco adequadas)
    3. PONTE: o grau difuso vira o CF inicial de cada candidatura
       Hypothesis("candidate", nomeObra, grau)
    4. Drools fireAllRules(): regras de CF (competências, época, acompanhamento)
@@ -136,19 +136,20 @@ CF inicial. Há três ficheiros de regras, em `bassoon-engine/src/main/resources
 
 | Ficheiro | Regra(s) | @CF | O que faz |
 |----------|----------|-----|-----------|
-| `skills_rules.drl` | skill REFERENCE | 1.00 | Obra de referência para uma competência pedida |
-| | skill HIGH | 0.70 | Trabalha bem a competência |
-| | skill MEDIUM | 0.30 | Trabalha a competência, mas há melhores |
-| | (LOW) | sem regra | Não contribui (CF = 0) |
-| | skill NONE | -0.50 | Desaconselhada para a competência (penaliza) |
+| `skills_rules.drl` | skill REFERENCE | 0.85 | Obra de referência para uma competência pedida |
+| | skill HIGH | 0.55 | Trabalha bem a competência |
+| | skill MEDIUM | 0.15 | Trabalha, mas h� melhores |
+| | skill MEDIUM_LOW | -0.15 | Pouco adequada |
+| | skill LOW | -0.40 | Desaconselhada |
+| | skill AVOID | -0.70 | Fortemente desaconselhada para a competência (penaliza) |
 | `last_era_rules.drl` | era penalty | -0.30 | Penaliza obras da mesma época da última estudada (favorece variedade) |
-| `accompaniment_rules.drl` | accompaniment match | 0.30 | Reforça obras com o acompanhamento preferido pelo professor |
+| `accompaniment_rules.drl` | accompaniment match | 0.45 | Reforça obras com o acompanhamento preferido pelo professor |
 
 Todas as regras seguem o mesmo molde (baseado na ficha 4 do professor):
 
 ```drl
 rule "skill HIGH"
-@CF(0.7)
+@CF(0.55)
 lock-on-active true
 when
     Evidence( description == EvidenceType.SKILL_1
@@ -219,7 +220,7 @@ O relatório prévio fala de regras R1 a R7. Esta é a correspondência com a im
 | R1 (nível -> dificuldade) | Substituída pelo front-end difuso (`suitability.fcl` + `StudentLevelMapper`) |
 | R2 (motivação corrige a faixa) | Substituída: a motivação entra como deslocamento no `StudentLevelMapper` |
 | Filtro de candidatos | Threshold de adequação difusa (0.4) no `RecommendationEngine` |
-| R4 (competências) | `skills_rules.drl` (4 regras, uma por `SkillLevel`) |
+| R4 (competências) | `skills_rules.drl` (7 regras, uma por `SkillLevel`) |
 | R6 (repetição de época) | `last_era_rules.drl` (era penalty) |
 | (novo) preferência de acompanhamento | `accompaniment_rules.drl` (accompaniment match) |
 | Ordenação | Java, no `RecommendationEngine` |
@@ -240,7 +241,7 @@ Todo o código está em inglês. Só os comentários ficam em português.
 | `Era` | BAROQUE, CLASSICAL, ROMANTIC, CONTEMPORARY, OTHER |
 | `Accompaniment` | SOLO, PIANO, BASSO_CONTINUO, ORCHESTRA |
 | `DifficultyLevel` | LEVEL_1 .. LEVEL_6 (cada um com valor inteiro 1..6) |
-| `SkillLevel` | REFERENCE, HIGH, MEDIUM, LOW, NONE |
+| `SkillLevel` | REFERENCE, HIGH, MEDIUM_HIGH, MEDIUM, MEDIUM_LOW, LOW, AVOID |
 | `Skill` | 24 competências (ver tabela abaixo) |
 | `EvidenceType` | STUDENT_LEVEL, SKILL_1, SKILL_2, SKILL_3, MOTIVATION, LAST_ERA, PREFERRED_ACCOMPANIMENT |
 
@@ -260,7 +261,7 @@ Todo o código está em inglês. Só os comentários ficam em português.
 
 - `Work` (pacote `kb` usa, modelo em `model/`): obra do catálogo. Campos: id, name, composer,
   era, country, accompaniment, difficultyLevel, videoLink, prerequisiteId,
-  `Map<Skill, SkillLevel> skills`. `getSkillLevel(skill)` devolve `LOW` se a competência não
+  `Map<Skill, SkillLevel> skills`. `getSkillLevel(skill)` devolve `MEDIUM` se a competência não
   estiver definida; `skillLevelFor(Object)` é a versão usada nas regras.
 - `Evidence` (implementa `CfFact`): input do professor. `EvidenceType` + valor tipado (Object)
   + CF. Tem construtor sem CF (assume 1.0) para factos determinísticos como o nível.
@@ -370,48 +371,11 @@ sem backend; **esse mock está desatualizado** e não reflete o catálogo nem as
 
 ---
 
-## Pontos em aberto
-
-- **Catálogo:** só 2 obras; faltam as restantes da Tabela 9.
-- **Spring Boot:** o `pom` usa 3.3.0. A preferência do grupo é Spring Boot 4; decidir se se
-  faz o upgrade.
-- **Texto desatualizado a limpar:** `mockData.js`, alguns comentários que ainda dizem "Vue" ou
-  "R1/R2/R4/R6", e TODOs antigos (ex.: "preencher 31 obras", "escolher SDK do LLM").
-
----
-
 ## TODO
 
-### Base de conhecimento
-
-- [ ] Carregar todas as obras na base de conhecimento
-- [ ] Preencher links YouTube e pré-requisitos em falta
-
-### Regras
-
-- [ ] Ajustar valores finais de CF
-- [ ] Ajustar thresholds e membership functions do fuzzy
-- [ ] Remover valores numéricos de CF dos comentários (`.drl`, `SkillLevel`, `CONTEXT.md`,
-  testes) — a fonte de verdade são os `@CF` nos `.drl`
-
-### LLM
-
-- [ ] Rever prompt do LLM
-
-### UI
-
-- [ ] Rever texto todo da UI
-- [ ] Rever design da secção de justificação na UI
-
-### Relatório
-
-- [ ] Re-escrever relatório
-
-### Código
-
-- [ ] UI deve mostrar erro mais amigável se a API falhar (ex.: sem backend, ou sem chave do Groq)
-- [x] Rever comentários e Javadoc no projeto todo (Java, JSX, .drl, .fcl, testes, Dockerfiles, configs)
-
+- [ ] Simplificar coisas? pedir ao claude para analisar e ver o que dá para apagar e/ou simplificar
+- [ ] Remover pasta docs e file CONTEXT.md do projeto antes de enviar
+- [ ] Pedir ao Claude para analisar e preparar defesa do trabalho. Quais são os files e flows mais importantes e criar um .md file com isso
 ---
 
 ## Referências (pasta `projetos_prof/`)

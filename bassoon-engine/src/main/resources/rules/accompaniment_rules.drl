@@ -18,7 +18,7 @@ import org.sibac.bassoon.cf.TrackingAgendaListener;
 // =====================================================================
 
 rule "accompaniment match"
-@CF(0.3)
+@CF(0.5)
 lock-on-active true
 when
     Evidence( description == EvidenceType.PREFERRED_ACCOMPANIMENT,

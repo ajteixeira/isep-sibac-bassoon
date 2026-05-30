@@ -41,25 +41,29 @@ public class JustificationService {
 
   private static final String SYSTEM_INSTRUCTION =
       """
-      Es um assistente de um professor de fagote do ensino superior em Portugal. Escreves
-      justificacoes pedagogicas curtas para obras que um sistema pericial recomendou.
+      Es um professor de fagote. Para cada obra, recebes o que o professor
+      pediu e o que a obra oferece. Escreve um paragrafo natural — como se
+      falasses com um colega, nao como um robo a listar factos.
 
-      Regras de escrita:
-      - Escreve em portugues europeu (PT-PT), nao portugues do Brasil.
-      - Texto corrido, 2 a 3 frases por obra. Sem titulos, sem markdown, sem listas, sem negrito.
-      - Refere-te a cada obra pelo nome. Nao numeres as obras nem escrevas "Obra 1" ou "Trabalho 1".
-      - Baseia-te SO nos factos dados de cada obra. Nao inventes competencias, niveis nem dados.
-      - Nunca escrevas codigos internos do sistema (por exemplo "skill HIGH", "era penalty" ou
-        "accompaniment match"); explica por palavras tuas o que significam.
-      - Usa sempre os termos em portugues que aparecem nos factos (por exemplo "baixo continuo",
-        nunca "basso continuo").
-      - Quando um facto mencionar "penalizacao", "desvantagem" ou "desaconselhada",
-        explica-o como um ponto negativo ou uma limitacao. Nunca o transformes em algo positivo
-        nem uses palavras como "continuidade" ou "interessante" para descrever uma penalizacao.
+      Cobre todos os pontos recebidos: skills, acompanhamento, epoca,
+      pre-requisitos. Mostra o balanco entre pontos fortes e fracos.
 
-      Responde APENAS com um objeto JSON valido, sem texto antes nem depois, com este formato:
+      NAO inventes. NAO uses frases feitas ("e uma obra que", "permite
+      desenvolver", "ajuda a"). NAO uses adjetivos vagos.
+      Portugues europeu, COM ACENTOS. Escreve "não", nunca "nao".
+
+      Exemplo:
+        Factos: Dificuldade muito acessivel. Ponto forte: Staccato. Trabalha Legato mas
+        ha melhores. Desaconselhada para Flicking. Acompanhamento Baixo
+        continuo (preferido). ATENCAO: Barroco — perdeu prioridade.
+      Resposta:
+        "O Telemann e acessivel e destaca-se pelo staccato. O baixo continuo\n"
+        + "alinha com a preferencia do professor, embora o legato tenha\n"
+        + "melhores alternativas e o flicking seja desaconselhado. A epoca\n"
+        + "barroca repete a ultima estudada, o que lhe tira alguma prioridade."
+
+      Responde APENAS com JSON:
       {"justificacoes": [{"obra": <numero>, "texto": "<justificacao>"}]}
-      onde <numero> e o numero da obra tal como aparece no pedido.
       """;
 
   /**
@@ -76,6 +80,7 @@ public class JustificationService {
     }
 
     Map<String, List<String>> factsByWork = buildFactsByWork(works, request);
+    addReversePrereqFacts(factsByWork, works, catalog);
     String userPrompt = buildPrompt(works, factsByWork);
     LOG.debug("Calling Groq with prompt of {} chars", userPrompt.length());
 
@@ -84,7 +89,11 @@ public class JustificationService {
 
     for (int i = 0; i < works.size(); i++) {
       String text = byNumber.get(i + 1);
-      works.get(i).setJustification(text != null && !text.isBlank() ? text : fallback());
+      if (text != null && !text.isBlank()) {
+        works.get(i).setJustification(clean(text));
+      } else {
+        works.get(i).setJustification(fallback());
+      }
     }
 
     LOG.info("Justifications filled for {} works", works.size());
@@ -99,7 +108,7 @@ public class JustificationService {
 
     Map<String, List<String>> result = new HashMap<>();
     for (var w : works) {
-      Work work = catalog.byName(w.getWorkName());
+      Work work = catalog.byId(w.getWorkId());
       if (work != null) {
         result.put(w.getWorkName(), buildFacts(work, request));
       }
@@ -110,17 +119,22 @@ public class JustificationService {
   private List<String> buildFacts(Work work, RecommendationRequest request) {
     List<String> facts = new ArrayList<>();
 
-    facts.add("Dificuldade " + work.getDifficultyLevel().getValue() + " em 6.");
+    facts.add("Dificuldade " + PtLabels.difficulty(work.getDifficultyLevel().getValue()) + ".");
 
     if (request.getSkills() != null) {
       for (var s : request.getSkills()) {
         var level = work.getSkillLevel(s.getSkill());
-        facts.add(
-            "A obra "
-                + PtLabels.skillLevelPhrase(level)
-                + " a competencia "
-                + PtLabels.skill(s.getSkill())
-                + ".");
+        String label = PtLabels.skill(s.getSkill());
+        switch (level) {
+          case REFERENCE -> facts.add("Excelente para " + label + " (obra de referencia).");
+          case HIGH -> facts.add("Muito boa para " + label + ".");
+          case MEDIUM_HIGH -> facts.add("Boa para " + label + ".");
+          case MEDIUM -> facts.add("Razoavel para " + label + ".");
+          case MEDIUM_LOW -> facts.add("Fraca para " + label + ".");
+          case LOW -> facts.add("Ma para " + label + ".");
+          case AVOID -> facts.add("Pessima para " + label + ".");
+          default -> {}
+        }
       }
     }
 
@@ -129,41 +143,73 @@ public class JustificationService {
           request.getAccompaniments().stream()
               .anyMatch(a -> a.getType() == work.getAccompaniment());
       if (preferred) {
-        facts.add(
-            "Usa um acompanhamento preferido pelo professor: "
-                + PtLabels.accompaniment(work.getAccompaniment())
-                + ".");
+        facts.add("Acompanhamento " + PtLabels.accompaniment(work.getAccompaniment())
+            + " (preferido pelo professor).");
+      } else {
+        String preferredLabel = request.getAccompaniments().stream()
+            .map(a -> PtLabels.accompaniment(a.getType()))
+            .collect(java.util.stream.Collectors.joining(" ou "));
+        facts.add("Acompanhamento " + PtLabels.accompaniment(work.getAccompaniment())
+            + " — diferente do preferido (" + preferredLabel + ").");
       }
     }
 
-    if (request.getLastEra() != null && request.getLastEra() == work.getEra()) {
-      facts.add(
-          "E do mesmo periodo ("
-              + PtLabels.era(work.getEra())
-              + ") da ultima obra estudada, por isso recebeu uma ligeira penalizacao para"
-              + " favorecer a variedade de epocas.");
+    if (request.getLastEra() != null) {
+      if (request.getLastEra() == work.getEra()) {
+        facts.add("ATENCAO: " + PtLabels.era(work.getEra())
+            + " — mesma epoca da ultima obra. Perdeu prioridade.");
+      } else {
+        facts.add("Epoca " + PtLabels.era(work.getEra())
+            + " — diferente da ultima estudada. Favorece variedade.");
+      }
     }
 
     if (work.getPrerequisiteId() >= 0) {
       Work prereq = catalog.byId(work.getPrerequisiteId());
       if (prereq != null) {
-        facts.add(
-            "Tem como pre-requisito a obra \""
-                + prereq.getName()
-                + "\", que convem estudar antes.");
+        facts.add("Estudar \"" + prereq.getName()
+            + "\" (" + prereq.getComposer() + ") antes pode ser uma boa preparacao para esta obra.");
       }
     }
 
     return facts;
   }
 
-  /** Builds the prompt with each work numbered and its facts listed. */
+  /**
+   * Adds reverse prerequisite facts: if this work is a prerequisite for another
+   * recommended work, mention it (explains why it appears first in the list).
+   */
+  private void addReversePrereqFacts(
+      Map<String, List<String>> factsByWork,
+      List<RecommendationResponse.RecommendedWork> works,
+      WorkCatalog catalog) {
+
+    for (var w : works) {
+      Work work = catalog.byId(w.getWorkId());
+      if (work == null) continue;
+
+      // Find which recommended works depend on this one
+      for (var other : works) {
+        if (other == w) continue;
+        Work otherWork = catalog.byId(other.getWorkId());
+        if (otherWork != null && otherWork.getPrerequisiteId() == work.getId()) {
+          List<String> facts = factsByWork.get(w.getWorkName());
+          if (facts != null) {
+            facts.add("Boa preparacao para \"" + otherWork.getName()
+                + "\" (" + otherWork.getComposer() + ") — por isso aparece primeiro.");
+          }
+        }
+      }
+    }
+  }
+
+  /** Builds the prompt with each work and its facts in a natural, conversational format. */
   private String buildPrompt(
       List<RecommendationResponse.RecommendedWork> works, Map<String, List<String>> factsByWork) {
 
     StringBuilder sb = new StringBuilder();
-    sb.append("O sistema pericial recomendou estas obras de fagote, por ordem de adequacao.\n");
-    sb.append("Escreve uma justificacao pedagogica curta para cada uma, em JSON.\n\n");
+    sb.append("Recomendei estas obras para um aluno de fagote. Preciso de uma justificacao\n");
+    sb.append("curta para cada uma. Tom direto, natural. NADA de frases feitas.\n\n");
 
     for (int i = 0; i < works.size(); i++) {
       var w = works.get(i);
@@ -173,19 +219,14 @@ public class JustificationService {
           .append(", ")
           .append(PtLabels.era(w.getEra()))
           .append(", dificuldade ")
-          .append(w.getDifficulty())
-          .append(" em 6, acompanhamento ")
+          .append(PtLabels.difficulty(w.getDifficulty()))
+          .append("/6, ")
           .append(PtLabels.accompaniment(w.getAccompaniment()))
           .append(")\n");
 
-      sb.append("Factos:\n");
       List<String> facts = factsByWork.getOrDefault(w.getWorkName(), List.of());
-      if (facts.isEmpty()) {
-        sb.append("- (sem factos adicionais)\n");
-      } else {
-        for (String fact : facts) {
-          sb.append("- ").append(fact).append("\n");
-        }
+      for (String fact : facts) {
+        sb.append("  ").append(fact).append("\n");
       }
       sb.append("\n");
     }
@@ -212,6 +253,34 @@ public class JustificationService {
       LOG.error("Failed to parse Groq JSON response: {}", response, e);
     }
     return result;
+  }
+
+  /** Removes forbidden cliches and generic padding the model insists on using. */
+  private static String clean(String text) {
+    text = text
+        .replace("e uma obra que ", "")
+        .replace("permite desenvolver ", "trabalha ")
+        .replace("ajuda a ", "")
+        .replace("fornece ", "oferece ")
+        .replace("constitui ", "")
+        .replace("alem disso, ", "")
+        .replace("no entanto, ", "")
+        .replace("por outro lado, ", "")
+        .replace("interessante", "util")
+        .replace("  ", " ");
+    // Remove generic padding phrases
+    text = text.replaceAll("(?i)convem estudar com um professor[^.]*\\.?\\s*", "");
+    text = text.replaceAll("(?i)estudar com um professor[^.]*\\.?\\s*", "");
+    text = text.replaceAll("(?i)para aproveitar ao maximo[^.]*\\.?\\s*", "");
+    text = text.replaceAll("(?i)sem duvida[^.]*\\.?\\s*", "");
+    text = text.replaceAll("(?i)certamente[^.]*\\.?\\s*", "");
+    text = text.replaceAll("(?i)com certeza[^.]*\\.?\\s*", "");
+    // Fix missing Portuguese accents
+    text = text.replace("acao", "ação").replace("cao ", "ção ")
+        .replace("Nao ", "Não ").replace("nao ", "não ")
+        .replace(" so ", " só ").replace(" So ", " Só ")
+        .replace("epoca", "época").replace("Epoca", "Época");
+    return text.trim();
   }
 
   private String fallback() {

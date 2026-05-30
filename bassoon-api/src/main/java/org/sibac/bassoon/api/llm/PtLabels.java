@@ -54,8 +54,10 @@ final class PtLabels {
       case REFERENCE -> "e uma referencia para";
       case HIGH -> "trabalha de forma muito vincada";
       case MEDIUM -> "trabalha de forma moderada";
-      case LOW -> "quase nao trabalha";
-      case NONE -> "nao trabalha (e e desaconselhada para)";
+      case MEDIUM_HIGH -> "trabalha de forma vincada";
+      case MEDIUM_LOW -> "quase nao trabalha";
+      case LOW -> "e desaconselhada para";
+      case AVOID -> "nao trabalha (e e fortemente desaconselhada para)";
     };
   }
 
@@ -83,6 +85,19 @@ final class PtLabels {
       case PIANO -> "Piano";
       case BASSO_CONTINUO -> "Baixo continuo";
       case ORCHESTRA -> "Orquestra";
+    };
+  }
+
+  /** Portuguese label for difficulty (e.g. 3 → "moderada"). */
+  static String difficulty(int level) {
+    return switch (level) {
+      case 1 -> "muito acessivel";
+      case 2 -> "acessivel";
+      case 3 -> "moderada";
+      case 4 -> "exigente";
+      case 5 -> "muito exigente";
+      case 6 -> "extremamente exigente";
+      default -> "";
     };
   }
 }

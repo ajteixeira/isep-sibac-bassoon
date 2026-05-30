@@ -63,11 +63,13 @@ public class DroolsService {
         results.stream().map(rec -> {
           RecommendationResponse.RecommendedWork dto =
               new RecommendationResponse.RecommendedWork();
+          dto.setWorkId(rec.getWorkId());
           dto.setWorkName(rec.getWorkName());
           dto.setScore(rec.getScore());
+          dto.setInitialScore(rec.getInitialScore());
           dto.setFiredRules(rec.getFiredRules());
 
-          Work work = catalog.byName(rec.getWorkName());
+          Work work = catalog.byId(rec.getWorkId());
           if (work != null) {
             dto.setComposer(work.getComposer());
             dto.setEra(work.getEra());

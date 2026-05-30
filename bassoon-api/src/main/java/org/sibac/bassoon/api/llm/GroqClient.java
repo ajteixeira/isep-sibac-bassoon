@@ -23,7 +23,7 @@ public class GroqClient {
 
   private static final URI ENDPOINT =
       URI.create("https://api.groq.com/openai/v1/chat/completions");
-  private static final String MODEL = "llama-3.1-8b-instant";
+  private static final String MODEL = "llama-3.3-70b-versatile";
 
   private final String apiKey;
   private final HttpClient http;
@@ -33,11 +33,6 @@ public class GroqClient {
     this.apiKey = apiKey;
     this.http = HttpClient.newHttpClient();
     this.json = new ObjectMapper();
-  }
-
-  /** Sends a prompt and returns the generated text (free-form response). */
-  public String generate(String systemInstruction, String userPrompt) {
-    return call(systemInstruction, userPrompt, false);
   }
 
   /**
