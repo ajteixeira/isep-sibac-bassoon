@@ -71,7 +71,7 @@ export const COMP_GROUPS = [
       { id: 'TRILLS',                  label: 'Trilos' },
       { id: 'ORNAMENTATION',           label: 'Ornamentação' },
       { id: 'HALF_HOLE_TECHNIQUE',     label: 'Meio-buraco' },
-      { id: 'CONTEMPORARY_TECHNIQUES', label: 'Tecnicas contemporâneas' },
+      { id: 'CONTEMPORARY_TECHNIQUES', label: 'Técnicas contemporâneas' },
     ],
   },
   {

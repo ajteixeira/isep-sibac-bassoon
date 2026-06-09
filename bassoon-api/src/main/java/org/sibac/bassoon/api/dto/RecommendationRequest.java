@@ -1,5 +1,6 @@
 package org.sibac.bassoon.api.dto;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import lombok.Data;
 import org.sibac.bassoon.model.Accompaniment;
@@ -12,6 +13,7 @@ import org.sibac.bassoon.model.StudentLevel;
 @Data
 public class RecommendationRequest {
 
+  @NotNull
   private StudentLevel studentLevel;
   private List<SkillPreference> skills;
   private Motivation motivation;

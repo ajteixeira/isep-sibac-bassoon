@@ -49,10 +49,6 @@ public class TrackingAgendaListener implements AgendaEventListener {
     return kieSession;
   }
 
-  public static List<Object> getActivations() {
-    return activations;
-  }
-
   public static double getRuleCF() {
     return ruleCF;
   }
@@ -74,7 +70,8 @@ public class TrackingAgendaListener implements AgendaEventListener {
         return hypothesis;
       }
     }
-    return null;
+    throw new IllegalStateException(
+        "No Hypothesis found for description='" + description + "', value='" + value + "'");
   }
 
   /**
@@ -100,7 +97,7 @@ public class TrackingAgendaListener implements AgendaEventListener {
    * Returns 1.0 if no CF-carrying facts are present (deterministic rule).
    */
   public static double getLHSminimumCF(Object conclusion) {
-    activations.remove(conclusion);
+    activations.removeIf(o -> o == conclusion);
     double minimum = 1.0;
     for (Object fact : activations) {
       if (fact instanceof CfFact cfFact) {
@@ -112,8 +109,7 @@ public class TrackingAgendaListener implements AgendaEventListener {
 
   @Override
   public void beforeMatchFired(BeforeMatchFiredEvent event) {
-    TrackingAgendaListener.kieSession =
-        (KieSession) event.getKieRuntime().getKieBase().getKieSessions().toArray()[0];
+    TrackingAgendaListener.kieSession = (KieSession) event.getKieRuntime();
     TrackingAgendaListener.activations.clear();
     TrackingAgendaListener.activations.addAll(event.getMatch().getObjects());
     Map<String, Object> metaData = event.getMatch().getRule().getMetaData();

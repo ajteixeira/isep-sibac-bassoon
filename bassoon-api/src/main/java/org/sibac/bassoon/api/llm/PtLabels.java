@@ -3,7 +3,6 @@ package org.sibac.bassoon.api.llm;
 import org.sibac.bassoon.model.Accompaniment;
 import org.sibac.bassoon.model.Era;
 import org.sibac.bassoon.model.Skill;
-import org.sibac.bassoon.model.SkillLevel;
 
 /**
  * Portuguese labels for domain enums, used when building the LLM prompt.
@@ -42,22 +41,6 @@ final class PtLabels {
       case RHYTHMIC_COMPLEXITY -> "Complexidade ritmica";
       case TECHNICAL_CHARACTER -> "Caracter tecnico";
       case EXPRESSIVE_CHARACTER -> "Caracter expressivo";
-    };
-  }
-
-  /**
-   * Portuguese phrase describing how strongly a work addresses a skill, according to its
-   * {@link SkillLevel}. Fits into a sentence like "A obra {phrase} a competencia X".
-   */
-  static String skillLevelPhrase(SkillLevel level) {
-    return switch (level) {
-      case REFERENCE -> "e uma referencia para";
-      case HIGH -> "trabalha de forma muito vincada";
-      case MEDIUM -> "trabalha de forma moderada";
-      case MEDIUM_HIGH -> "trabalha de forma vincada";
-      case MEDIUM_LOW -> "quase nao trabalha";
-      case LOW -> "e desaconselhada para";
-      case AVOID -> "nao trabalha (e e fortemente desaconselhada para)";
     };
   }
 

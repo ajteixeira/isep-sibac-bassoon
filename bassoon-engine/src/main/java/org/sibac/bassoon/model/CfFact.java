@@ -11,14 +11,8 @@ package org.sibac.bassoon.model;
  * <p>Certain facts (e.g. {@code Work}, which is catalog data) do NOT implement this
  * interface, so the listener ignores them when computing the minimum.
  */
-public interface CfFact extends Comparable<CfFact> {
+public interface CfFact {
 
   /** Certainty factor of this fact, in [-1, +1]. */
   double getCf();
-
-  /** Sorted by ascending CF, so the listener can find the weakest LHS fact. */
-  @Override
-  default int compareTo(CfFact other) {
-    return Double.compare(this.getCf(), other.getCf());
-  }
 }

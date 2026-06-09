@@ -10,11 +10,11 @@ import org.sibac.bassoon.cf.TrackingAgendaListener;
 // ACCOMPANIMENT PREFERENCE
 //
 // If the teacher indicates a preferred accompaniment type
-// (EvidenceType.PREFERRED_ACCOMPANIMENT), this rule gives a small
-// positive boost (CF 0.3) to works that use that type.
+// (EvidenceType.PREFERRED_ACCOMPANIMENT), this rule gives a
+// positive boost (CF 0.5) to works that use that type.
 //
-// The CF is low because accompaniment is a soft criterion:
-// a preference, not a strong pedagogical requirement.
+// Accompaniment is a soft criterion — a preference, not a strong
+// pedagogical requirement.
 // =====================================================================
 
 rule "accompaniment match"

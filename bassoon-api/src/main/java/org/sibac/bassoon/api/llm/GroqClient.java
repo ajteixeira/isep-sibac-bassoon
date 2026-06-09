@@ -36,26 +36,24 @@ public class GroqClient {
   }
 
   /**
-   * Same as {@link #generate}, but requests a JSON response (Groq JSON mode).
-   * The prompt must mention "JSON" for the mode to be accepted.
+   * Calls the Groq API and returns the response content as a String.
+   * The system instruction should mention "JSON" so the model returns valid JSON.
    */
   public String generateJson(String systemInstruction, String userPrompt) {
-    return call(systemInstruction, userPrompt, true);
+    return call(systemInstruction, userPrompt);
   }
 
-  private String call(String systemInstruction, String userPrompt, boolean jsonMode) {
+  private String call(String systemInstruction, String userPrompt) {
     try {
       Map<String, Object> body = new HashMap<>();
       body.put("model", MODEL);
       body.put("temperature", 0.3);
+      body.put("response_format", Map.of("type", "json_object"));
       body.put(
           "messages",
           List.of(
               Map.of("role", "system", "content", systemInstruction),
               Map.of("role", "user", "content", userPrompt)));
-      if (jsonMode) {
-        body.put("response_format", Map.of("type", "json_object"));
-      }
 
       String bodyJson = json.writeValueAsString(body);
 
@@ -76,6 +74,10 @@ public class GroqClient {
 
       return extractText(response.body());
 
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.error("Groq API call interrupted", e);
+      return "Justification could not be generated: interrupted";
     } catch (Exception e) {
       LOG.error("Groq API call failed", e);
       return "Justification could not be generated: " + e.getMessage();
@@ -97,7 +99,11 @@ public class GroqClient {
       }
       Map<String, Object> message =
           (Map<String, Object>) choices.get(0).get("message");
-      return (String) message.get("content");
+      if (message == null) {
+        return "No message in Groq response";
+      }
+      String content = (String) message.get("content");
+      return content != null ? content : "No content in Groq response";
     } catch (Exception e) {
       LOG.error("Failed to parse Groq response", e);
       return "Failed to parse Groq response";

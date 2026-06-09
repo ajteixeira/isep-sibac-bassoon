@@ -17,16 +17,16 @@ public class FactListener implements RuleRuntimeEventListener {
 
   @Override
   public void objectInserted(ObjectInsertedEvent event) {
-    LOG.info("Inserted: {}", event.getObject());
+    LOG.debug("Inserted: {}", event.getObject());
   }
 
   @Override
   public void objectUpdated(ObjectUpdatedEvent event) {
-    LOG.info("Updated: {}", event.getObject());
+    LOG.debug("Updated: {}", event.getObject());
   }
 
   @Override
   public void objectDeleted(ObjectDeletedEvent event) {
-    LOG.info("Removed: {}", event.getOldObject());
+    LOG.debug("Removed: {}", event.getOldObject());
   }
 }

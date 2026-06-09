@@ -1,5 +1,6 @@
 package org.sibac.bassoon.api.controller;
 
+import jakarta.validation.Valid;
 import org.sibac.bassoon.api.dto.RecommendationRequest;
 import org.sibac.bassoon.api.dto.RecommendationResponse;
 import org.sibac.bassoon.api.service.DroolsService;
@@ -27,7 +28,7 @@ public class RecommendationController {
   }
 
   @PostMapping
-  public RecommendationResponse recommend(@RequestBody RecommendationRequest request) {
+  public RecommendationResponse recommend(@Valid @RequestBody RecommendationRequest request) {
     var works = droolsService.recommend(request);
     justificationService.fillJustifications(works, request);
     return new RecommendationResponse(works);

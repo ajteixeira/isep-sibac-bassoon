@@ -112,26 +112,28 @@ tocar uma obra dificil.)
 
 #### 2.3.3 Fuzzificação (membership functions)
 
-**Nível do aluno:**
+**Nível do aluno** (eixo 0.5–6.5, acomoda o shift de motivação):
 
 ```
-TERM beginner     := (0, 1)   (1.5, 1)  (3, 0)
-TERM intermediate := (2, 0)   (3, 1)    (4, 1)  (5, 0)
-TERM advanced     := (3, 0)   (4.5, 1)  (6.5, 1)
+TERM beginner     := (0.5, 1) (1.5, 1) (3.5, 0)   ← trapézio: platô 0.5–1.5, declive até 3.5
+TERM intermediate := (2, 0)   (3, 1)   (4, 1)  (5, 0)   ← trapézio: platô 3–4
+TERM advanced     := (3.5, 0) (5.5, 1) (6.5, 1)   ← rampa a subir até 5.5, platô até 6.5
+```
+
+**Dificuldade da obra** (eixo 1–6):
+
+```
+TERM easy   := (1, 1)  (2, 1)  (3.5, 0)             ← platô 1–2, declive até 3.5
+TERM medium := (2, 0)  (3, 1)  (4, 1)  (5, 0)       ← trapézio: platô 3–4  (NÃO é triângulo!)
+TERM hard   := (3.5, 0)  (5, 1)  (6, 1)             ← rampa a subir, platô 5–6
 ```
 
 ```
-TERM easy   := (1, 1)  (2, 1)  (3.5, 0)
-TERM medium := (2, 0)  (3.5, 1)  (5, 0)
-TERM hard   := (3.5, 0)  (5, 1)  (6, 1)
-```
-
-```
-easy:    ████████▌                 medium:      ████████▌       hard:            ████████▌
-         1.0 ▔▔▔▔╲                              ╱▔▔▔▔╲                      ╱▔▔▔▔▔▔
-                  ╲                            ╱      ╲                    ╱
-         0.0 ──────┼───                 0.0 ───┼────────┼───       0.0 ───┼─────────
-                  1 2 3.5                      2  3.5   5                3.5  5  6
+easy:   ██████▌              medium:     ╱▔▔▔▔╲        hard:          ╱▔▔▔▔▔▔
+        1.0 ▔▔╲                       ╱          ╲                    ╱
+                 ╲                    ╱             ╲                 ╱
+        0.0 ──────┼──               0.0─┼──────────┼─           0.0──┼──────────
+             1 2 3.5                    2  3   4   5               3.5  5  6
 ```
 
 #### 2.3.4 Defuzzificação (saída)
@@ -144,6 +146,34 @@ TERM high    := (0.7, 0) (0.9, 1) (1, 1)
 METHOD : COG  (Centre of Gravity)
 DEFAULT := 0
 ```
+
+**O que é o COG e porque foi escolhido:**
+
+Após a acumulação (MAX das regiões ativadas pelas regras), o resultado ainda é
+uma figura geométrica difusa (uma ou mais regiões com área). O COG converte essa
+figura num **único número** calculando o "centro de equilíbrio" da área total:
+
+```
+        ∫ x · μ(x) dx
+COG = ─────────────────
+          ∫ μ(x) dx
+```
+
+Intuitivamente: imagina a área acumulada como uma peça de cartão. O COG é o
+ponto onde ela ficaria em equilíbrio numa agulha. Se duas regiões de igual área
+estiverem em lados opostos, o resultado fica a meio — não salta para uma nem
+para a outra.
+
+Alternativas comuns e porque não foram usadas:
+
+| Método | Comportamento | Problema para este sistema |
+|---|---|---|
+| **MOM** (Mean of Maxima) | Usa só o pico da região mais alta | Ignora as outras regras que também dispararam — perde a contribuição da assimetria |
+| **SOM/LOM** (Smallest/Largest of Maxima) | Usa o extremo esquerdo/direito do pico | Demasiado drástico; pequenas variações de entrada dão saltos no output |
+| **COG** | Pondera toda a área acumulada | Suave e contínuo — transições graduais entre obras adequadas e inadequadas, que é exatamente o que se quer |
+
+O COG é o método padrão para sistemas Mamdani que modelam grandezas contínuas
+(como "adequação") onde se quer uma resposta proporcional e sem descontinuidades.
 
 #### 2.3.5 As 9 regras (RULEBLOCK No1)
 
@@ -175,27 +205,33 @@ Aluno `INTERMEDIATE` (3.5) + motivação `HIGH` (+1.0) = 4.5. Obra dif 5.
 
 **Fuzzificação das entradas:**
 
-| Termo | studentLevel=4.5 | workDifficulty=5 |
+| Termo | studentLevel=4.5 | Cálculo |
 |---|---|---|
-| beginner | 0 (4.5 > 3) | — |
-| intermediate | 0.5 (a descer do platô) | — |
-| advanced | 1.0 (no centro) | — |
-| easy | — | 0 (5 > 3.5) |
-| medium | — | 0 (5 = extremo direito) |
-| hard | — | 1.0 (no platô) |
+| beginner | **0** | 4.5 > 3.5 (fim do declive) |
+| intermediate | **0.5** | descida do platô: (5−4.5)/(5−4) = 0.5 |
+| advanced | **0.5** | subida da rampa: (4.5−3.5)/(5.5−3.5) = 0.5 |
+
+| Termo | workDifficulty=5 | Cálculo |
+|---|---|---|
+| easy | **0** | 5 > 3.5 |
+| medium | **0** | 5 = extremo direito do trapézio (2,0)(3,1)(4,1)(5,0) |
+| hard | **1.0** | 5 está no início do platô (5,1)(6,1) |
 
 **Regras que disparam:**
 
-| Regra | studentLevel | workDifficulty | Força (MIN) | Saída |
+| Regra | studentLevel | workDifficulty | Força = MIN | Saída |
 |---|---|---|---|---|
-| R5 | intermediate 0.5 | medium 0 | 0 | high (não dispara) |
-| R6 | intermediate 0.5 | hard 1.0 | **0.5** | low (clipped a 0.5) |
-| R8 | advanced 1.0 | medium 0 | 0 | medium (não dispara) |
-| R9 | advanced 1.0 | hard 1.0 | **1.0** | high (clipped a 1.0) |
+| R5 | intermediate 0.5 | medium **0** | 0 | high (não dispara) |
+| R6 | intermediate **0.5** | hard **1.0** | **0.5** | low (clipped a 0.5) |
+| R8 | advanced **0.5** | medium **0** | 0 | medium (não dispara) |
+| R9 | advanced **0.5** | hard **1.0** | **0.5** | high (clipped a 0.5) |
 
-**Acumulação (MAX):** low(0.5) + high(1.0) → os dois termos são combinados.
+> **Nota:** O `advanced` vale 0.5 (não 1.0) porque a rampa só atinge 1.0 em 5.5,
+> e o aluno está em 4.5 — a meio do caminho.
 
-**Defuzzificação (COG):** o centro de gravidade da área combinada ≈ **0.60**.
+**Acumulação (MAX):** low(0.5) + high(0.5) → ambos os termos contribuem com igual força.
+
+**Defuzzificação (COG):** as duas regiões simétricas centram-se ≈ **0.60**.
 
 Este valor (> 0.5) passa o threshold e a obra entra na sessão Drools com
 CF inicial ≈ 0.60.
@@ -228,10 +264,8 @@ Para cada obra que passou o filtro difuso, o motor:
 
 | EvidenceType | Valor | CF |
 |---|---|---|
-| `STUDENT_LEVEL` | `INTERMEDIATE` | 1.0 (determinístico) |
 | `SKILL_1` | `Skill.LEGATO` | 0.9 (confiança do professor) |
 | `SKILL_2` | `Skill.STACCATO` | 0.7 |
-| `MOTIVATION` | `Motivation.HIGH` | 1.0 |
 | `LAST_ERA` | `Era.BAROQUE` | 1.0 |
 | `PREFERRED_ACCOMPANIMENT` | `Accompaniment.ORCHESTRA` | 0.8 |
 
@@ -245,8 +279,8 @@ Cada nível de skill tem a sua regra. Exemplo — `skill HIGH`:
 
 ```drl
 rule "skill HIGH"
-@CF(0.55)                    ← CF da regra (contribuição máxima)
-lock-on-active true
+@CF(0.5)                     ← CF da regra (contribuição máxima se evidência CF=1.0)
+lock-on-active true          ← evita reativações quando o facto Hypothesis é updated
 when
     Evidence( description == EvidenceType.SKILL_1
               || description == EvidenceType.SKILL_2
@@ -257,27 +291,34 @@ when
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(
         Hypothesis.class, "candidate", $name);
-    $h.update();                 ← aplica MYCIN
+    $h.update();                 ← aplica MYCIN (via TrackingAgendaListener)
 end
 ```
 
+O padrão repete-se para todos os 7 níveis de `SkillLevel` (REFERENCE, HIGH,
+MEDIUM_HIGH, MEDIUM, MEDIUM_LOW, LOW, AVOID), cada um com o seu `@CF`.
+
 #### 2.5.2 Como o `$h.update()` funciona
 
-O método `Hypothesis.update()`:
+O `TrackingAgendaListener` interceta cada regra **antes** de o RHS correr
+(`beforeMatchFired`) e captura: (a) os factos do LHS, (b) o `@CF` da regra,
+(c) o nome da regra.
 
-1. Obtém o `FactHandle` da Hypothesis na memória de trabalho
-2. Pede ao `TrackingAgendaListener` o **CF mínimo** entre os factos do LHS
-   que implementam `CfFact` (neste caso, só a `Evidence`; `Work` não conta)
-3. Multiplica esse mínimo pelo `@CF` da regra:
+O método `Hypothesis.update()` (chamado do RHS):
+
+1. Obtém o `FactHandle` da Hypothesis na memória de trabalho via `getKieSession()`
+2. Pede ao listener o **CF mínimo** entre os factos do LHS que implementam `CfFact`
+   (a `Evidence`; `Work` NÃO implementa `CfFact`, portanto não entra no mínimo)
+3. Multiplica esse mínimo pelo `@CF` da regra (**regra da cadeia mais fraca**):
    ```
-   contribuição = min(CF dos factos LHS) × @CF(regra)
+   contribuição = min(CF dos factos CfFact do LHS) × @CF(regra)
    ```
 4. Combina com o CF atual da Hypothesis usando a fórmula **MYCIN**:
    ```
    CF_novo = MYCIN.combine(CF_atual, contribuição)
    ```
-5. Regista a regra disparada no `RuleFiredTracker`
-6. Faz `session.update(handle, this)` para propagar a mudança
+5. Regista a regra disparada no `RuleFiredTracker` (para mostrar na UI)
+6. Faz `session.update(handle, this)` para propagar a mudança na memória de trabalho
 
 #### 2.5.3 Fórmula MYCIN
 
@@ -296,51 +337,54 @@ public static double combine(double oldCf, double newCf) {
 **Exemplo de propagação:**
 
 Obra com CF inicial 0.60. Professor pediu `LEGATO` (CF 0.9). A obra tem
-`LEGATO = HIGH` (@CF 0.55).
+`LEGATO = HIGH` (@CF 0.5).
 
 ```
-contribuição = min(0.9) × 0.55 = 0.495
-CF novo = 0.60 + 0.495 × (1 - 0.60) = 0.60 + 0.198 = 0.798
+contribuição = min(0.9) × 0.5 = 0.45
+CF novo = 0.60 + 0.45 × (1 - 0.60) = 0.60 + 0.18 = 0.78
 ```
 
 Depois o professor também pediu `STACCATO` (CF 0.7). A obra tem
-`STACCATO = MEDIUM` (@CF 0.15).
+`STACCATO = MEDIUM` (@CF 0.1).
 
 ```
-contribuição = min(0.7) × 0.15 = 0.105
-CF novo = 0.798 + 0.105 × (1 - 0.798) = 0.798 + 0.021 = 0.819
+contribuição = min(0.7) × 0.1 = 0.07
+CF novo = 0.78 + 0.07 × (1 - 0.78) = 0.78 + 0.015 = 0.795
 ```
 
 Se o professor indicou `lastEra = BAROQUE` e a obra é Barroca:
 
 ```
 contribuição = min(1.0) × (-0.30) = -0.30
-CF novo = (0.819 + (-0.30)) / (1 - min(0.819, 0.30))
-        = 0.519 / 0.70 = 0.741
+CF novo = (0.795 + (-0.30)) / (1 - min(0.795, 0.30))
+        = 0.495 / 0.70 = 0.707
 ```
+
+> A evidência LAST_ERA não tem CF explícito — é inserida sem CF, portanto assume 1.0.
+> O motor usa o terceiro ramo do MYCIN (sinais opostos): (old + new) / (1 − min(|old|, |new|)).
 
 Se o acompanhamento coincide (`ORCHESTRA`, CF 0.8):
 
 ```
-contribuição = min(0.8) × 0.45 = 0.36
-CF novo = 0.741 + 0.36 × (1 - 0.741) = 0.741 + 0.093 = 0.834
+contribuição = min(0.8) × 0.5 = 0.40
+CF novo = 0.707 + 0.40 × (1 - 0.707) = 0.707 + 0.117 = 0.824
 ```
 
-**Score final: 0.834.**
+**Score final: 0.824.**
 
 #### 2.5.4 Todas as regras e CFs
 
 | Regra | `@CF` | Ficheiro | Quando dispara |
 |---|---|---|---|
-| `skill REFERENCE` | +0.85 | `skills_rules.drl` | Obra é referência para skill pedida |
-| `skill HIGH` | +0.55 | `skills_rules.drl` | Obra é muito boa para skill pedida |
-| `skill MEDIUM_HIGH` | +0.30 | `skills_rules.drl` | Obra é boa para skill pedida |
-| `skill MEDIUM` | +0.15 | `skills_rules.drl` | Obra trabalha a skill |
-| `skill MEDIUM_LOW` | -0.15 | `skills_rules.drl` | Obra é fraca para skill pedida |
-| `skill LOW` | -0.40 | `skills_rules.drl` | Obra é má para skill pedida |
-| `skill AVOID` | -0.70 | `skills_rules.drl` | Obra é péssima para skill pedida |
-| `era penalty` | -0.30 | `last_era_rules.drl` | Época = última estudada |
-| `accompaniment match` | +0.45 | `accompaniment_rules.drl` | Acompanhamento = preferido |
+| `skill REFERENCE` | +0.8 | `skills_rules.drl` | Obra é referência para skill pedida |
+| `skill HIGH` | +0.5 | `skills_rules.drl` | Obra é muito boa para skill pedida |
+| `skill MEDIUM_HIGH` | +0.3 | `skills_rules.drl` | Obra é boa para skill pedida |
+| `skill MEDIUM` | +0.1 | `skills_rules.drl` | Obra trabalha a skill |
+| `skill MEDIUM_LOW` | -0.1 | `skills_rules.drl` | Obra é fraca para skill pedida |
+| `skill LOW` | -0.4 | `skills_rules.drl` | Obra é má para skill pedida |
+| `skill AVOID` | -0.8 | `skills_rules.drl` | Obra é péssima para skill pedida |
+| `era penalty` | -0.3 | `last_era_rules.drl` | Época = última estudada |
+| `accompaniment match` | +0.5 | `accompaniment_rules.drl` | Acompanhamento = preferido |
 
 ### 2.6 STEP 4 — Ordenação e pós-processamento
 
@@ -362,7 +406,11 @@ o fuzzy mas foram fortemente penalizadas pelas regras (ex: várias skills AVOID)
 
 Se uma obra tem `prerequisiteId` (ex: Sonatine ID 15 → prerequisiteId = 14,
 a Suite), e a Suite está na lista mas **depois** da Sonatine, o motor move-a
-para antes. É uma reordenação em Java puro (não é regra Drools).
+para antes. É uma reordenação em Java puro — **não é regra Drools**.
+
+O algoritmo `applyPrerequisites` usa um loop `do-while` que repete enquanto
+houver movimentos: garante que cadeias transitivas (A→B→C) são corretamente
+resolvidas numa única passagem.
 
 Exemplo:
 ```
@@ -370,6 +418,8 @@ Exemplo:
                          ↓ applyPrerequisites
 [Suite 0.65, Sonatine 0.80, Concerto 0.75]    ← Suite movida para antes
 ```
+
+> Ordem de execução: 1) ordenação por CF, 2) `applyPrerequisites`, 3) filtro de score mínimo.
 
 ### 2.7 STEP 5 — Justificação via LLM
 
@@ -399,15 +449,18 @@ Para cada obra recomendada, o serviço constrói factos em Português:
 #### 2.7.2 Prompt do sistema
 
 ```
-PROIBIDO: "e uma obra que", "permite desenvolver", "ajuda a", "fornece",
-"constitui", "oferece", "alem disso", "no entanto", "por outro lado",
-"interessante", "util", "importante", "adequado".
+Es um professor de fagote. Para cada obra, recebes o que o professor
+pediu e o que a obra oferece. Escreve um paragrafo natural — como se
+falasses com um colega, nao como um robo a listar factos.
 
-Es um professor de fagote do ensino superior em Portugal.
-Escreve um paragrafo natural — como se falasses com um colega.
+Cobre todos os pontos recebidos: skills, acompanhamento, epoca,
+pre-requisitos. Mostra o balanco entre pontos fortes e fracos.
 
-Cobre todos os pontos recebidos. NAO inventes.
-Portugues europeu, COM ACENTOS.
+NAO inventes. NAO uses frases feitas ("e uma obra que", "permite
+desenvolver", "ajuda a"). NAO uses adjetivos vagos.
+Portugues europeu, COM ACENTOS. Escreve "não", nunca "nao".
+
+[segue-se um exemplo de factos e resposta esperada]
 
 Responde APENAS com JSON:
 {"justificacoes": [{"obra": <numero>, "texto": "<justificacao>"}]}
@@ -439,11 +492,11 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 | `SkillLevel` | Enum com 7 níveis: `REFERENCE`, `HIGH`, `MEDIUM_HIGH`, `MEDIUM`, `MEDIUM_LOW`, `LOW`, `AVOID` |
 | `StudentLevel` | `BEGINNER`, `INTERMEDIATE`, `ADVANCED` |
 | `Motivation` | `LOW`, `NEUTRAL`, `HIGH` |
-| `Era` | `BAROQUE`, `CLASSICAL`, `ROMANTIC`, `CONTEMPORARY` |
+| `Era` | `BAROQUE`, `CLASSICAL`, `ROMANTIC`, `CONTEMPORARY`, `OTHER` |
 | `Accompaniment` | `SOLO`, `PIANO`, `BASSO_CONTINUO`, `ORCHESTRA` |
 | `DifficultyLevel` | `LEVEL_1` a `LEVEL_6` |
-| `Evidence` | Facto de entrada do professor. Implementa `CfFact`. Campos: description (EvidenceType), value (Object tipado), cf (double). Tem construtor sem CF (assume 1.0 para factos determinísticos) |
-| `EvidenceType` | Enum: `STUDENT_LEVEL`, `SKILL_1`, `SKILL_2`, `SKILL_3`, `MOTIVATION`, `LAST_ERA`, `PREFERRED_ACCOMPANIMENT` |
+| `Evidence` | Facto de entrada do professor. Implementa `CfFact`. Campos: description (EvidenceType), value (Object tipado), cf (double). Tem construtor sem CF (assume 1.0 para factos determinísticos como `LAST_ERA`) |
+| `EvidenceType` | Enum: `SKILL_1`, `SKILL_2`, `SKILL_3`, `LAST_ERA`, `PREFERRED_ACCOMPANIMENT`. **Nota:** `studentLevel` e `motivation` NÃO são factos Drools — são passados diretamente ao sistema fuzzy antes da sessão |
 | `Hypothesis` | Conclusão intermédia. Implementa `CfFact`. `update()` aplica MYCIN usando o `TrackingAgendaListener` |
 | `CfFact` | Interface: `double getCf()`. Permite ao listener saber que factos têm CF sem obrigar `Work` a ter |
 
@@ -451,10 +504,10 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 
 | Classe | Descrição |
 |---|---|
-| `Mycin` | Fórmula MYCIN. Método estático `combine(oldCf, newCf)`. Comutativa e associativa — a ordem das regras não afeta o resultado |
-| `TrackingAgendaListener` | Implementa `AgendaEventListener`. Antes de cada RHS (`beforeMatchFired`), recolhe: (a) CF mínimo dos factos LHS que implementam `CfFact`, (b) `@CF` da regra, (c) nome da regra. Expõe via métodos estáticos |
-| `FactListener` | Implementa `RuleRuntimeEventListener`. Regista inserções de factos para debug |
-| `RuleFiredTracker` | Mapa estático `obra → List<FiredRule>`. `record()` é chamado pelo `Hypothesis.update()` |
+| `Mycin` | Fórmula MYCIN. Método estático `combine(oldCf, newCf)`. Comutativa e associativa — a ordem das regras não afeta o resultado final |
+| `TrackingAgendaListener` | Implementa `AgendaEventListener`. Actua como **ponte** entre Drools e o motor de CFs: no evento `beforeMatchFired` captura os factos do LHS, o `@CF` da regra e o nome da regra em campos estáticos (um pedido de cada vez). O RHS chama então `Hypothesis.update()` que lê esses campos para calcular a contribuição |
+| `FactListener` | Implementa `RuleRuntimeEventListener`. Regista inserções/atualizações/remoções de factos em DEBUG — apenas para diagnóstico |
+| `RuleFiredTracker` | Mapa estático `nomeDaObra → List<FiredRule>`. `record()` é chamado por `Hypothesis.update()`. Limpo entre pedidos com `clear()` |
 
 ### 3.3 `fuzzy/` — Lógica difusa
 
@@ -508,15 +561,15 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 
 | Regra | CF | Ficheiro |
 |---|---|---|
-| `skill REFERENCE` | +0.85 | `skills_rules.drl` |
-| `skill HIGH` | +0.55 | `skills_rules.drl` |
-| `skill MEDIUM_HIGH` | +0.30 | `skills_rules.drl` |
-| `skill MEDIUM` | +0.15 | `skills_rules.drl` |
-| `skill MEDIUM_LOW` | -0.15 | `skills_rules.drl` |
-| `skill LOW` | -0.40 | `skills_rules.drl` |
-| `skill AVOID` | -0.70 | `skills_rules.drl` |
-| `era penalty` | -0.30 | `last_era_rules.drl` |
-| `accompaniment match` | +0.45 | `accompaniment_rules.drl` |
+| `skill REFERENCE` | +0.8 | `skills_rules.drl` |
+| `skill HIGH` | +0.5 | `skills_rules.drl` |
+| `skill MEDIUM_HIGH` | +0.3 | `skills_rules.drl` |
+| `skill MEDIUM` | +0.1 | `skills_rules.drl` |
+| `skill MEDIUM_LOW` | -0.1 | `skills_rules.drl` |
+| `skill LOW` | -0.4 | `skills_rules.drl` |
+| `skill AVOID` | -0.8 | `skills_rules.drl` |
+| `era penalty` | -0.3 | `last_era_rules.drl` |
+| `accompaniment match` | +0.5 | `accompaniment_rules.drl` |
 
 ### 5.3 Conversão Excel → SkillLevel (v5, opção A)
 
@@ -551,10 +604,11 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 - 9 metadados (ID, nome, compositor, época, país, acompanhamento, dificuldade 1-6, pré-requisito, videoLink YouTube)
 - 24 competências pontuadas em 7 níveis
 
-**5 relações de pré-requisito:**
+**6 relações de pré-requisito:**
 - Kreutzer → Crusell (ID 26 → ID 6)
 - Weber Op.75 → Andante e Rondo (ID 7 → ID 8)
 - Suite → Sonatine (ID 14 → ID 15)
+- Niggun → Hopi (ID 23 → ID 24)
 - Don Pasquale → Lucia (ID 27 → ID 28)
 - Lucia → Rossini (ID 28 → ID 29)
 
@@ -571,3 +625,125 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 | LLM | Groq API (llama-3.3-70b) | — |
 | Interface | React + Vite | 18 / 5 |
 | Build | Maven (multi-módulo) | — |
+
+---
+
+## 9. Justificações de design — perguntas esperadas na defesa
+
+### 9.1 "Porque é que a lógica difusa só é usada num sítio?"
+
+O sistema lida com dois tipos de incerteza distintos, e cada um tem o tratamento certo:
+
+| Tipo de incerteza | Exemplo no sistema | Tratamento correto |
+|---|---|---|
+| **Vaguidade** — conceitos sem fronteira nítida | "Esta obra tem a dificuldade certa para este aluno?" | **Lógica difusa** |
+| **Incerteza epistémica** — confiança na evidência | "O professor acha que o aluno precisa de LEGATO, mas talvez não a 100%" | **Factores de confiança (MYCIN)** |
+
+Usar fuzzy para as skills seria errado: a obra ou é referência para LEGATO ou não é — o perito
+atribuiu 7 níveis discretos a cada par (obra, skill) de forma deliberada. Não há vaguidade
+no conceito; a incerteza é sobre *o que o professor pediu*, não sobre a classificação da obra.
+O MYCIN foi criado exatamente para este tipo de incerteza epistémica (diagnóstico médico).
+
+Usar fuzzy para a época ou o acompanhamento seria igualmente errado: são categorias discretas,
+não grandezas contínuas.
+
+A adequação dificuldade/nível é genuinamente vaga porque um aluno de nível 3.4 e um de nível 3.6
+não são fundamentalmente diferentes — não existe uma fronteira onde "passa" e "não passa". É aqui
+que a lógica difusa tem razão de existir.
+
+---
+
+### 9.2 "O input do professor sobre o nível do aluno não devia ser também fuzzy?"
+
+Esta é uma limitação real do sistema, e vale a pena reconhecê-la honestamente.
+
+**O que o sistema faz:** o professor escolhe `INTERMEDIATE` + `HIGH` → o `StudentLevelMapper`
+converte deterministicamente para **4.5** → esse número entra no sistema fuzzy.
+
+O 4.5 é um número **certo**, sem incerteza. Só depois é que o fuzzy o fuzzifica:
+intermediate=0.5, advanced=0.5.
+
+**Porque a tensão existe:** quando o professor diz "INTERMEDIATE", isso é em si um conceito
+vago — não há uma fronteira nítida entre intermédio e avançado. Uma abordagem mais "puramente
+fuzzy" deixaria o professor expressar graus de pertença directamente, por exemplo
+"intermédio a 0.7, avançado a 0.3". Isso não foi modelado.
+
+**Porque o design actual ainda funciona:**
+
+O `StudentLevelMapper` coloca o aluno num eixo contínuo (0.5–6.5), e o fuzzy já faz a
+transição gradual sobre esse valor:
+
+```
+INTERMEDIATE + LOW  → 2.5 → beginner=0.5, intermediate=0.5
+INTERMEDIATE        → 3.5 → intermediate=1.0
+INTERMEDIATE + HIGH → 4.5 → intermediate=0.5, advanced=0.5
+```
+
+A motivação serve exactamente para o professor expressar "este aluno está mais para o lado
+avançado do intermédio". O fuzzy absorve essa imprecisão no passo seguinte.
+
+**O que não se modelou:** se o professor diz INTERMEDIATE mas *não tem a certeza* da categoria
+— se está genuinamente em dúvida entre intermédio e avançado — essa incerteza sobre a
+*escolha da categoria em si* não é capturada. Seria necessário um input de CF sobre o nível
+(como existe para as skills), o que aumentaria a complexidade da UI.
+
+---
+
+### 9.3 "Porque é que as regras usam `lock-on-active true`?"
+
+Sem `lock-on-active`, quando `$h.update()` chama `session.update(handle, this)`, o Drools
+reinsere a Hypothesis na agenda. Isso poderia reativar a mesma regra com os mesmos factos,
+criando um loop infinito de atualizações.
+
+`lock-on-active true` diz ao Drools: "enquanto esta regra estiver ativa na agenda, não a
+reative — mesmo que os factos do LHS se alterem". Garante que cada regra dispara **exatamente
+uma vez** por combinação (Evidence, Work).
+
+---
+
+### 9.4 "Porque é que o MYCIN é comutativo? Não devia importar a ordem?"
+
+A fórmula MYCIN tem a propriedade matemática de ser comutativa e associativa — combinar
+evidência A depois de B dá o mesmo resultado que B depois de A. Isto é deliberado: num
+sistema pericial, a ordem em que as regras disparam não deve influenciar a conclusão final.
+
+O Drools não garante ordem de disparo entre regras independentes (a menos que se use
+`salience`), por isso a comutatividade do MYCIN é uma garantia de correcção do motor.
+
+---
+
+### 9.5 "O LLM não pode inventar recomendações?"
+
+Não — o LLM apenas recebe **factos estruturados** gerados pelo motor (dificuldade, resultado
+de cada skill, época, acompanhamento, pré-requisitos) e é instruído explicitamente a não
+inventar. As obras a apresentar, a sua ordem e os factos que as descrevem são 100%
+determinados pelo motor de inferência. O LLM só transforma esses factos em linguagem natural.
+
+Se o LLM falhar (erro de rede, resposta inválida), o sistema apresenta um fallback textual
+sem quebrar — a recomendação em si não é afectada.
+
+---
+
+### 9.6 "Porque é que o motor usa uma sessão Drools nova por pedido?"
+
+O `TrackingAgendaListener` e o `RuleFiredTracker` usam estado estático (campos `static`).
+Uma sessão partilhada entre pedidos causaria condições de corrida e resultados misturados.
+
+Criar uma sessão nova por pedido (`kieContainer.newKieSession`) e chamar `dispose()` no fim
+garante isolamento total. O custo de criação é baixo (o `KieContainer` já tem as regras
+compiladas em memória).
+
+---
+
+### 9.7 "Como é que o sistema lida com uma obra sem avaliação para uma skill?"
+
+Se o perito não avaliou um par (obra, skill) na base de conhecimento, o método
+`Work.getSkillLevel(skill)` devolve **`MEDIUM`** por omissão:
+
+```java
+return skills.getOrDefault(skill, SkillLevel.MEDIUM);
+```
+
+Isto significa que a obra recebe um boost neutro baixo (+0.1 CF) para essa skill — nem
+penaliza nem favorece. É uma decisão conservadora: na dúvida, não se penaliza a obra por
+falta de dados.

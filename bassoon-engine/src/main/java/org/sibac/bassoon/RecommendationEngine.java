@@ -3,7 +3,6 @@ package org.sibac.bassoon;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +99,6 @@ public class RecommendationEngine {
         kSession.insert(work);
         kSession.insert(new Hypothesis("candidate", work.getName(), suitability));
         initialScores.put(work.getName(), suitability);
-        worksById.put(work.getId(), work);
         inserted++;
       } else {
         filtered++;
@@ -121,13 +119,7 @@ public class RecommendationEngine {
     }
 
     // --- insert evidences ---
-    kSession.insert(new Evidence(EvidenceType.STUDENT_LEVEL, level));
-
-    if (motivation != null) {
-      kSession.insert(new Evidence(EvidenceType.MOTIVATION, motivation));
-    }
-
-    for (int i = 0; i < skills.size() && i < 3; i++) {
+    for (int i = 0; skills != null && i < skills.size() && i < 3; i++) {
       SkillInput si = skills.get(i);
       EvidenceType type = switch (i) {
         case 0 -> EvidenceType.SKILL_1;
@@ -144,7 +136,7 @@ public class RecommendationEngine {
     if (accompaniments != null) {
       for (var a : accompaniments) {
         kSession.insert(new Evidence(EvidenceType.PREFERRED_ACCOMPANIMENT,
-            a.tipo(), a.cf()));
+            a.accompaniment(), a.cf()));
       }
     }
 
@@ -176,9 +168,7 @@ public class RecommendationEngine {
     recommendations = applyPrerequisites(recommendations, worksById);
 
     // --- drop works below minimum score ---
-    recommendations = recommendations.stream()
-        .filter(r -> r.getScore() >= MIN_RECOMMENDATION_SCORE)
-        .collect(Collectors.toList());
+    recommendations.removeIf(r -> r.getScore() < MIN_RECOMMENDATION_SCORE);
 
     kSession.dispose();
     return recommendations;
@@ -192,29 +182,33 @@ public class RecommendationEngine {
       List<Recommendation> ordered, Map<Double, Work> catalog) {
 
     List<Recommendation> result = new ArrayList<>(ordered);
+    boolean moved;
+    do {
+      moved = false;
+      for (int i = result.size() - 1; i >= 0; i--) {
+        Recommendation rec = result.get(i);
+        Work work = catalog.get(rec.getWorkId());
 
-    for (int i = result.size() - 1; i >= 0; i--) {
-      Recommendation rec = result.get(i);
-      Work work = catalog.get(rec.getWorkId());
+        if (work == null || work.getPrerequisiteId() < 0) {
+          continue;
+        }
 
-      if (work == null || work.getPrerequisiteId() < 0) {
-        continue;
+        Work prereq = catalog.get(work.getPrerequisiteId());
+        if (prereq == null) {
+          LOG.warn("Prerequisite not found: id={} for work {}", work.getPrerequisiteId(),
+              work.getName());
+          continue;
+        }
+
+        Recommendation prereqRec = findById(result, prereq.getId());
+        if (prereqRec != null && result.indexOf(prereqRec) > i) {
+          result.remove(prereqRec);
+          result.add(i, prereqRec);
+          moved = true;
+          LOG.info("R7: {} (prerequisite of {}) moved up", prereq.getName(), work.getName());
+        }
       }
-
-      Work prereq = catalog.get((double) work.getPrerequisiteId());
-      if (prereq == null) {
-        LOG.warn("Prerequisite not found: id={} for work {}", work.getPrerequisiteId(),
-            work.getName());
-        continue;
-      }
-
-      Recommendation prereqRec = findById(result, prereq.getId());
-      if (prereqRec != null && result.indexOf(prereqRec) > i) {
-        result.remove(prereqRec);
-        result.add(i, prereqRec);
-        LOG.info("R7: {} (prerequisite of {}) moved up", prereq.getName(), work.getName());
-      }
-    }
+    } while (moved);
 
     return result;
   }
@@ -257,5 +251,5 @@ public class RecommendationEngine {
   public record SkillInput(Skill skill, double cf) {}
 
   /** An accompaniment preference, with its CF. */
-  public record AccompanimentInput(Accompaniment tipo, double cf) {}
+  public record AccompanimentInput(Accompaniment accompaniment, double cf) {}
 }

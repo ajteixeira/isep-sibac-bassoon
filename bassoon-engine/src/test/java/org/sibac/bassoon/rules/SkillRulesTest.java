@@ -1,18 +1,22 @@
 package org.sibac.bassoon.rules;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieServices;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.sibac.bassoon.cf.TrackingAgendaListener;
 import org.sibac.bassoon.TestWorks;
+import org.sibac.bassoon.model.Accompaniment;
+import org.sibac.bassoon.model.DifficultyLevel;
+import org.sibac.bassoon.model.Era;
 import org.sibac.bassoon.model.Evidence;
 import org.sibac.bassoon.model.EvidenceType;
 import org.sibac.bassoon.model.Hypothesis;
 import org.sibac.bassoon.model.Skill;
+import org.sibac.bassoon.model.SkillLevel;
 import org.sibac.bassoon.model.Work;
 
 /**
@@ -24,9 +28,7 @@ import org.sibac.bassoon.model.Work;
  */
 class SkillRulesTest {
 
-  private static final double TOLERANCE = 1e-6;
-
-  private final KieContainer container = KieServices.Factory.get().getKieClasspathContainer();
+    private final KieContainer container = KieServices.Factory.get().getKieClasspathContainer();
 
   /** Runs a consultation with a single priority skill and returns the final candidate CF. */
   private double candidateCf(Work work, Skill skill, double evidenceCf, double seedCf) {
@@ -103,5 +105,20 @@ class SkillRulesTest {
     double cf = candidateCf(TestWorks.catalog().get(0), Skill.TRILLS, 0.9, seed);
     assertTrue(cf > seed,
         "HIGH should raise CF above seed " + seed + " but was " + cf);
+  }
+
+  @Test
+  void referenceRaisesMoreThanHigh() {
+    // REFERENCE (@CF 0.65) contributes more than HIGH (@CF 0.55).
+    // Classical Piano has LEGATO=HIGH; the reference work has LEGATO=REFERENCE.
+    Work referenceWork = new Work(99.0, "Reference Work", "Composer",
+        Era.BAROQUE, "DE", Accompaniment.SOLO, DifficultyLevel.LEVEL_4, "", -1,
+        Map.of(Skill.LEGATO, SkillLevel.REFERENCE));
+
+    double cfRef  = candidateCf(referenceWork, Skill.LEGATO, 0.9, 0.0);
+    double cfHigh = candidateCf(TestWorks.catalog().get(1), Skill.LEGATO, 0.9, 0.0);
+
+    assertTrue(cfRef > cfHigh,
+        "REFERENCE (" + cfRef + ") should raise CF more than HIGH (" + cfHigh + ")");
   }
 }

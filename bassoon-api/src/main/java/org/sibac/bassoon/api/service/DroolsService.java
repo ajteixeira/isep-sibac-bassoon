@@ -1,12 +1,9 @@
 package org.sibac.bassoon.api.service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.sibac.bassoon.RecommendationEngine;
 import org.sibac.bassoon.api.dto.RecommendationRequest;
 import org.sibac.bassoon.api.dto.RecommendationResponse;
-import org.sibac.bassoon.kb.KnowledgeBase;
 import org.sibac.bassoon.model.Work;
 import org.sibac.bassoon.output.Recommendation;
 import org.slf4j.Logger;
@@ -36,23 +33,18 @@ public class DroolsService {
 
   public List<RecommendationResponse.RecommendedWork> recommend(RecommendationRequest request) {
 
-    List<RecommendationEngine.SkillInput> skills = new ArrayList<>();
-    if (request.getSkills() != null) {
-      for (var s : request.getSkills()) {
-        skills.add(new RecommendationEngine.SkillInput(s.getSkill(), s.getCf()));
-      }
-    }
+    List<RecommendationEngine.SkillInput> skills = request.getSkills() == null ? List.of() :
+        request.getSkills().stream()
+            .map(s -> new RecommendationEngine.SkillInput(s.getSkill(), s.getCf()))
+            .toList();
 
-    List<RecommendationEngine.AccompanimentInput> accompaniments = new ArrayList<>();
-    if (request.getAccompaniments() != null) {
-      for (var a : request.getAccompaniments()) {
-        accompaniments.add(
-            new RecommendationEngine.AccompanimentInput(a.getType(), a.getCf()));
-      }
-    }
+    List<RecommendationEngine.AccompanimentInput> accompaniments = request.getAccompaniments() == null ? List.of() :
+        request.getAccompaniments().stream()
+            .map(a -> new RecommendationEngine.AccompanimentInput(a.getType(), a.getCf()))
+            .toList();
 
     List<Recommendation> results = engine.run(
-        KnowledgeBase.works(),
+        catalog.all(),
         request.getStudentLevel(),
         request.getMotivation(),
         skills,
@@ -87,7 +79,7 @@ public class DroolsService {
             }
           }
           return dto;
-        }).collect(Collectors.toList());
+        }).toList();
 
     LOG.info("Recommendation generated: {} works", recommendations.size());
     return recommendations;
