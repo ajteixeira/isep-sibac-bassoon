@@ -97,7 +97,7 @@ public class RecommendationEngine {
 
       if (suitability >= SUITABILITY_THRESHOLD) {
         kSession.insert(work);
-        kSession.insert(new Hypothesis("candidate", work.getName(), suitability));
+        kSession.insert(new Hypothesis("candidate", work.getName(), 0.0));
         initialScores.put(work.getName(), suitability);
         inserted++;
       } else {

@@ -57,7 +57,7 @@ class SkillRulesTest {
 
   @Test
   void mediumLevelRaisesCandidateLess() {
-    // LEGATO is MEDIUM (@CF 0.45) -> rises, but less than HIGH
+    // LEGATO is MEDIUM (@CF 0.1) -> rises, but less than HIGH
     double seed = 0.0;
     double cf = candidateCf(TestWorks.catalog().get(0), Skill.LEGATO, 0.9, seed);
     assertTrue(cf > seed, "MEDIUM skill should raise CF above " + seed + " but was " + cf);
@@ -65,7 +65,7 @@ class SkillRulesTest {
 
   @Test
   void highBeatsMedium() {
-    // HIGH (@CF 0.55) should contribute more than MEDIUM (@CF 0.45)
+    // HIGH (@CF 0.5) should contribute more than MEDIUM (@CF 0.1)
     double cfHigh = candidateCf(TestWorks.catalog().get(0), Skill.TRILLS, 0.9, 0.0);
     double cfMedium = candidateCf(TestWorks.catalog().get(0), Skill.LEGATO, 0.9, 0.0);
     assertTrue(cfHigh > cfMedium,

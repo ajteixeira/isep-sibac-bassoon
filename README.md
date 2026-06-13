@@ -66,7 +66,7 @@ npm install --prefix bassoon-ui
 
 ```bash
 mvn install -pl bassoon-engine -DskipTests
-mvn spring-boot:run -f bassoon-api/pom.xml -Dspring-boot.run.profiles=local
+mvn spring-boot:run -f bassoon-api/pom.xml "-Dspring-boot.run.profiles=local"
 ```
 
 Starts at `http://localhost:8080`.

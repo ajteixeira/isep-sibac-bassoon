@@ -119,20 +119,28 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <div className="brand">
-          Bassoon
-          <span className="sub">sistema pericial - repertorio de fagote</span>
-        </div>
-        <div className="app-header-right">sibac - 2026</div>
-      </header>
-      {hasStarted && <Stepper steps={STEP_NAMES} current={step} />}
-      <main className="app-body">
-        <div className="step-wrap">
-          {renderStep()}
-        </div>
-      </main>
+    <div className="app-layout">
+      <aside className="app-sidebar">
+        <img
+          src="/image_bassoon.png"
+          alt=""
+        />
+      </aside>
+      <div className="app-shell">
+        <header className="app-header">
+          <div className="brand">
+            Bassoon
+            <span className="sub">sistema pericial - repertorio de fagote</span>
+          </div>
+          <div className="app-header-right">sibac - 2026</div>
+        </header>
+        {hasStarted && <Stepper steps={STEP_NAMES} current={step} />}
+        <main className="app-body">
+          <div className="step-wrap">
+            {renderStep()}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

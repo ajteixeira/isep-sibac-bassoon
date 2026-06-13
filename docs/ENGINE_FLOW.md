@@ -233,8 +233,10 @@ Aluno `INTERMEDIATE` (3.5) + motivação `HIGH` (+1.0) = 4.5. Obra dif 5.
 
 **Defuzzificação (COG):** as duas regiões simétricas centram-se ≈ **0.60**.
 
-Este valor (> 0.5) passa o threshold e a obra entra na sessão Drools com
-CF inicial ≈ 0.60.
+Este valor (> 0.5) passa o threshold, portanto a obra entra na sessão Drools.
+A suitability serve **apenas como filtro de entrada** — não semeia o CF: a
+candidatura arranca com **CF inicial 0.0** (neutro) e são as regras de evidência
+que o constroem a partir do zero (ver §2.4).
 
 #### 2.3.7 Threshold e filtragem
 
@@ -258,8 +260,11 @@ Para um aluno intermédio (3.5), isto significa:
 Para cada obra que passou o filtro difuso, o motor:
 
 1. **Insere o facto `Work`** — a obra do catálogo (não tem CF; é um dado certo)
-2. **Insere `Hypothesis("candidate", nomeObra, suitability)`** — a candidatura,
-   com CF inicial igual à suitability do fuzzy
+2. **Insere `Hypothesis("candidate", nomeObra, 0.0)`** — a candidatura, com
+   **CF inicial neutro (0.0)**. A suitability NÃO entra no CF: serve só de filtro
+   de entrada (§2.3.7). São as evidências/regras que constroem o CF a partir de
+   zero — isto evita que a combinação MYCIN, ao acumular a suitability (já ≥ 0.5)
+   com várias evidências positivas, sature todas as candidaturas perto de 1.0
 3. **Insere as `Evidence`** do professor:
 
 | EvidenceType | Valor | CF |
@@ -336,12 +341,12 @@ public static double combine(double oldCf, double newCf) {
 
 **Exemplo de propagação:**
 
-Obra com CF inicial 0.60. Professor pediu `LEGATO` (CF 0.9). A obra tem
+Obra com CF inicial 0.0 (neutro). Professor pediu `LEGATO` (CF 0.9). A obra tem
 `LEGATO = HIGH` (@CF 0.5).
 
 ```
 contribuição = min(0.9) × 0.5 = 0.45
-CF novo = 0.60 + 0.45 × (1 - 0.60) = 0.60 + 0.18 = 0.78
+CF novo = 0.0 + 0.45 × (1 - 0.0) = 0.45
 ```
 
 Depois o professor também pediu `STACCATO` (CF 0.7). A obra tem
@@ -349,15 +354,15 @@ Depois o professor também pediu `STACCATO` (CF 0.7). A obra tem
 
 ```
 contribuição = min(0.7) × 0.1 = 0.07
-CF novo = 0.78 + 0.07 × (1 - 0.78) = 0.78 + 0.015 = 0.795
+CF novo = 0.45 + 0.07 × (1 - 0.45) = 0.45 + 0.0385 = 0.489
 ```
 
 Se o professor indicou `lastEra = BAROQUE` e a obra é Barroca:
 
 ```
 contribuição = min(1.0) × (-0.30) = -0.30
-CF novo = (0.795 + (-0.30)) / (1 - min(0.795, 0.30))
-        = 0.495 / 0.70 = 0.707
+CF novo = (0.489 + (-0.30)) / (1 - min(0.489, 0.30))
+        = 0.189 / 0.70 = 0.269
 ```
 
 > A evidência LAST_ERA não tem CF explícito — é inserida sem CF, portanto assume 1.0.
@@ -367,10 +372,14 @@ Se o acompanhamento coincide (`ORCHESTRA`, CF 0.8):
 
 ```
 contribuição = min(0.8) × 0.5 = 0.40
-CF novo = 0.707 + 0.40 × (1 - 0.707) = 0.707 + 0.117 = 0.824
+CF novo = 0.269 + 0.40 × (1 - 0.269) = 0.269 + 0.292 = 0.562
 ```
 
-**Score final: 0.824.**
+**Score final: 0.562.**
+
+> Repara que, depois da penalização de época, o CF caiu a 0.269 — encostado ao
+> `MIN_RECOMMENDATION_SCORE` (0.30, §2.6.2). Com o seed neutro, são as evidências
+> que decidem se a obra sobrevive; o match de acompanhamento recuperou-a para 0.562.
 
 #### 2.5.4 Todas as regras e CFs
 
@@ -400,7 +409,10 @@ MIN_RECOMMENDATION_SCORE = 0.30
 ```
 
 Obras com CF final < 0.30 são descartadas. Remove ruído — obras que passaram
-o fuzzy mas foram fortemente penalizadas pelas regras (ex: várias skills AVOID).
+o fuzzy mas foram penalizadas pelas regras (ex: skills AVOID/LOW) ou que só
+reuniram evidência positiva fraca. Como o CF arranca neutro (0.0, §2.4), uma obra
+cuja única evidência é uma skill `MEDIUM` (contribuição ≈ 0.09) fica abaixo do
+limiar e cai — é intencional: sem evidência relevante, não há recomendação forte.
 
 #### 2.6.3 Pré-requisitos
 

@@ -5,6 +5,14 @@ da ficha 3 e fatores de confianca da ficha 4) no projeto bassoon, da forma mais 
 
 Le primeiro `analise_ficha3_logica_difusa.md` e `analise_ficha4_fatores_confianca.md`.
 
+> **Nota (desatualizado vs. implementacao final).** Esta ficha e um documento de
+> planeamento. O codigo final usa outros nomes (`FuzzySuitabilityService`,
+> `suitability.fcl`, `Hypothesis("candidate", ...)`). Mais importante: a decisao
+> final **NAO semeia o CF da candidatura com a adequacao difusa**. A suitability e
+> apenas o filtro de entrada; o CF arranca em 0.0 (neutro) e e construido pelas
+> regras — isto evita a saturacao MYCIN que punha todas as candidaturas perto de
+> 1.0. Ver `docs/ENGINE_FLOW.md` (§2.4) para o comportamento atual.
+
 ## 1. A pergunta e a resposta curta
 
 > Vou ter o `bassoon-engine` em Drools e outro `bassoon-fuzzy` em jFuzzy? Ou cabe tudo no mesmo

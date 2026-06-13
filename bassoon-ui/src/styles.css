@@ -49,10 +49,58 @@ button:disabled { cursor: not-allowed; }
    Layout shell
    ========================================================================= */
 
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  --sidebar-w: 160px;
+}
+
+/* ---- sidebar ---- */
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 160px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+}
+.app-sidebar img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0.82;
+  filter: grayscale(100%) contrast(0.92) brightness(1.04);
+  transition: filter 0.7s ease, opacity 0.7s ease;
+  /* fade right edge into content — lives on the image itself, never overhangs */
+  mask-image: linear-gradient(to right, black 78%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 78%, transparent 100%);
+}
+.app-sidebar img:hover {
+  opacity: 1;
+  filter: grayscale(0%) contrast(1) brightness(1);
+}
+
+@media (max-width: 900px) {
+  .app-layout {
+    --sidebar-w: 0px;
+  }
+  .app-sidebar {
+    display: none;
+  }
+}
+
 .app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 /* ---- header ---- */
@@ -147,7 +195,7 @@ button:disabled { cursor: not-allowed; }
 .sheet-footer {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: var(--sidebar-w, 0px);
   right: 0;
   background: var(--bg);
   border-top: 2px solid var(--ink);
@@ -1184,6 +1232,9 @@ button:disabled { cursor: not-allowed; }
 }
 .inf-rule-cf.neg {
   color: #f87171;
+}
+.inf-rule-cf.none {
+  color: rgba(255,255,255,0.7);
 }
 
 

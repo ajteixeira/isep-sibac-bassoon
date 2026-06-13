@@ -163,8 +163,8 @@ export default function StepResultados({
           <div className="l-pipeline">
             <span className="stage">factos</span>
             <span className="stage">regras</span>
-            <span className="stage">ordenacao</span>
-            <span className="stage">justificacao</span>
+            <span className="stage">ordenação</span>
+            <span className="stage">justificação</span>
           </div>
         </div>
         <FooterNav onBack={onBack} />
@@ -372,12 +372,12 @@ export default function StepResultados({
 
 const RULE_DESCRIPTIONS = {
   'skill REFERENCE': 'obra de referência',
-  'skill HIGH': 'muito recomendada',
-  'skill MEDIUM_HIGH': 'recomendada',
-  'skill MEDIUM': 'adequada',
-  'skill MEDIUM_LOW': 'pouco adequada',
-  'skill LOW': 'desaconselhada',
-  'skill AVOID': 'a evitar',
+  'skill HIGH': 'muito adequada',
+  'skill MEDIUM_HIGH': 'adequada',
+  'skill MEDIUM': 'razoável',
+  'skill MEDIUM_LOW': 'fraca',
+  'skill LOW': 'desadequada',
+  'skill AVOID': 'totalmente desadequada',
   'accompaniment match': 'preferência correspondida',
   'era penalty': 'penalização por repetição de época',
 }
@@ -415,13 +415,45 @@ function InferencePanel({ firedRules, workName, initialScore, score, state }) {
     ? MOTIVACOES.find((m) => m.id === state.motivacao)?.label.toLowerCase()
     : 'neutra'
 
-  // group by category
-  const grouped = {}
+  // fired rules split by category
+  const firedAccomp = rules.filter((r) => r.category === 'ACCOMPANIMENT')
+  const firedEra = rules.filter((r) => r.category === 'ERA')
+  const otherGrouped = {}
   for (const r of rules) {
     const cat = r.category || 'OTHER'
-    if (!grouped[cat]) grouped[cat] = []
-    grouped[cat].push(r)
+    if (cat === 'ACCOMPANIMENT' || cat === 'ERA') continue
+    if (!otherGrouped[cat]) otherGrouped[cat] = []
+    otherGrouped[cat].push(r)
   }
+
+  // user inputs that decide whether a dimension is shown at all
+  const prefAccomp = state.acompanhamentos || []
+  const lastEra = state.ultimoPeriodo || null
+
+  // a standard fired-rule row (numeric CF, coloured by sign)
+  const firedRow = (category, r) => {
+    const detailLabel = translateDetail(category, r.detail)
+    const desc = RULE_DESCRIPTIONS[r.name] || r.name
+    const positive = r.cf >= 0
+    return (
+      <div key={r.name + (r.detail || '')} className="inf-rule">
+        <span className="inf-rule-subject">{detailLabel || desc}</span>
+        <span className="inf-rule-desc">{detailLabel ? desc : ''}</span>
+        <span className={`inf-rule-cf ${positive ? 'pos' : 'neg'}`}>
+          {positive ? '+' : ''}{r.cf.toFixed(2)}
+        </span>
+      </div>
+    )
+  }
+
+  // a "rule did not fire" row — no score impact, neutral white marker
+  const idleRow = (key, subject, desc, good) => (
+    <div key={key} className="inf-rule">
+      <span className="inf-rule-subject">{subject}</span>
+      <span className="inf-rule-desc">{desc}</span>
+      <span className="inf-rule-cf none">{good ? '✓' : '✗'}</span>
+    </div>
+  )
 
   return (
     <div className="inf-panel">
@@ -444,32 +476,46 @@ function InferencePanel({ firedRules, workName, initialScore, score, state }) {
         </div>
       )}
 
-      {Object.entries(grouped).map(([category, catRules]) => {
+      {Object.entries(otherGrouped).map(([category, catRules]) => {
         const header = CATEGORY_HEADERS[category] || CATEGORY_HEADERS.OTHER
         return (
           <div key={category} className="inf-cat">
             <div className="inf-cat-head">{header.label}</div>
-            {catRules.map((r) => {
-              const detailLabel = translateDetail(category, r.detail)
-              const desc = RULE_DESCRIPTIONS[r.name] || r.name
-              const positive = r.cf >= 0
-              return (
-                <div key={r.name + (r.detail || '')} className="inf-rule">
-                  <span className="inf-rule-subject">
-                    {detailLabel || desc}
-                  </span>
-                  <span className="inf-rule-desc">
-                    {detailLabel ? desc : ''}
-                  </span>
-                  <span className={`inf-rule-cf ${positive ? 'pos' : 'neg'}`}>
-                    {positive ? '+' : ''}{r.cf.toFixed(2)}
-                  </span>
-                </div>
-              )
-            })}
+            {catRules.map((r) => firedRow(category, r))}
           </div>
         )
       })}
+
+      {prefAccomp.length > 0 && (
+        <div className="inf-cat">
+          <div className="inf-cat-head">{CATEGORY_HEADERS.ACCOMPANIMENT.label}</div>
+          {prefAccomp.map((pref) => {
+            const fired = firedAccomp.find((r) => r.detail === pref.id)
+            return fired
+              ? firedRow('ACCOMPANIMENT', fired)
+              : idleRow(
+                  `accomp-${pref.id}`,
+                  acompLabel(pref.id),
+                  'preferência de acompanhamento não correspondida',
+                  false
+                )
+          })}
+        </div>
+      )}
+
+      {lastEra && (
+        <div className="inf-cat">
+          <div className="inf-cat-head">{CATEGORY_HEADERS.ERA.label}</div>
+          {firedEra.length > 0
+            ? firedEra.map((r) => firedRow('ERA', r))
+            : idleRow(
+                `era-${lastEra}`,
+                eraLabel(lastEra),
+                'sem penalização por repetição de época',
+                true
+              )}
+        </div>
+      )}
     </div>
   )
 }
