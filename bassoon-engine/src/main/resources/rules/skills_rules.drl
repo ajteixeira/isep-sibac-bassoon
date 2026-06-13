@@ -3,7 +3,7 @@ package rules;
 import org.sibac.bassoon.model.Evidence;
 import org.sibac.bassoon.model.EvidenceType;
 import org.sibac.bassoon.model.Hypothesis;
-import org.sibac.bassoon.model.SkillLevel;
+import org.sibac.bassoon.model.SkillSuitability;
 import org.sibac.bassoon.model.Work;
 import org.sibac.bassoon.cf.TrackingAgendaListener;
 
@@ -11,7 +11,7 @@ import org.sibac.bassoon.cf.TrackingAgendaListener;
 // SKILL RULES
 //
 // For each priority skill requested by the teacher (SKILL_1..3) and each
-// work in the catalog, fires the rule for the SkillLevel that the work has
+// work in the catalog, fires the rule for the SkillSuitability that the work has
 // for that skill, and updates the work's candidacy.
 //
 // CF propagation (done by update()/listener):
@@ -21,8 +21,8 @@ import org.sibac.bassoon.cf.TrackingAgendaListener;
 // Work has no CF (catalog data is certain), so it does not enter the minimum.
 //
 // Drools note: avoid "description in (...)" with enum constants and avoid
-// casts inside constraints (getSkillLevel((Skill)$skill)). Both trip up the
-// parser. Use "||" and the method Work.skillLevelFor(Object) instead.
+// casts inside constraints (getSkillSuitability((Skill)$skill)). Both trip up the
+// parser. Use "||" and the method Work.skillSuitabilityFor(Object) instead.
 // =====================================================================
 
 rule "skill REFERENCE"
@@ -33,13 +33,13 @@ when
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.REFERENCE )
+    Work( $name : name, skillSuitabilityFor($skill) == SkillSuitability.REFERENCE )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();
 end
 
-rule "skill HIGH"
+rule "skill VERY_SUITABLE"
 @CF(0.5)
 lock-on-active true
 when
@@ -47,13 +47,13 @@ when
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.HIGH )
+    Work( $name : name, skillSuitabilityFor($skill) == SkillSuitability.VERY_SUITABLE )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();
 end
 
-rule "skill MEDIUM_HIGH"
+rule "skill SUITABLE"
 @CF(0.3)
 lock-on-active true
 when
@@ -61,13 +61,13 @@ when
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.MEDIUM_HIGH )
+    Work( $name : name, skillSuitabilityFor($skill) == SkillSuitability.SUITABLE )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();
 end
 
-rule "skill MEDIUM"
+rule "skill MODERATE"
 @CF(0.1)
 lock-on-active true
 when
@@ -75,13 +75,13 @@ when
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.MEDIUM )
+    Work( $name : name, skillSuitabilityFor($skill) == SkillSuitability.MODERATE )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();
 end
 
-rule "skill MEDIUM_LOW"
+rule "skill WEAK"
 @CF(-0.1)
 lock-on-active true
 when
@@ -89,13 +89,13 @@ when
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.MEDIUM_LOW )
+    Work( $name : name, skillSuitabilityFor($skill) == SkillSuitability.WEAK )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();
 end
 
-rule "skill LOW"
+rule "skill UNSUITABLE"
 @CF(-0.4)
 lock-on-active true
 when
@@ -103,13 +103,13 @@ when
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.LOW )
+    Work( $name : name, skillSuitabilityFor($skill) == SkillSuitability.UNSUITABLE )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();
 end
 
-rule "skill AVOID"
+rule "skill TOTALLY_UNSUITABLE"
 @CF(-0.8)
 lock-on-active true
 when
@@ -117,7 +117,7 @@ when
               || description == EvidenceType.SKILL_2
               || description == EvidenceType.SKILL_3,
               $skill : value )
-    Work( $name : name, skillLevelFor($skill) == SkillLevel.AVOID )
+    Work( $name : name, skillSuitabilityFor($skill) == SkillSuitability.TOTALLY_UNSUITABLE )
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(Hypothesis.class, "candidate", $name);
     $h.update();

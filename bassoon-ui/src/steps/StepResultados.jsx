@@ -372,12 +372,12 @@ export default function StepResultados({
 
 const RULE_DESCRIPTIONS = {
   'skill REFERENCE': 'obra de referência',
-  'skill HIGH': 'muito adequada',
-  'skill MEDIUM_HIGH': 'adequada',
-  'skill MEDIUM': 'razoável',
-  'skill MEDIUM_LOW': 'fraca',
-  'skill LOW': 'desadequada',
-  'skill AVOID': 'totalmente desadequada',
+  'skill VERY_SUITABLE': 'muito adequada',
+  'skill SUITABLE': 'adequada',
+  'skill MODERATE': 'razoável',
+  'skill WEAK': 'fraca',
+  'skill UNSUITABLE': 'desadequada',
+  'skill TOTALLY_UNSUITABLE': 'totalmente desadequada',
   'accompaniment match': 'preferência correspondida',
   'era penalty': 'penalização por repetição de época',
 }

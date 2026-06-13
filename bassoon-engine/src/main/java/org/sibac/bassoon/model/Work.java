@@ -18,7 +18,7 @@ public class Work {
   private final DifficultyLevel difficultyLevel;
   private final String videoLink;
   private final double prerequisiteId;
-  private final Map<Skill, SkillLevel> skills;
+  private final Map<Skill, SkillSuitability> skills;
 
   public Work(
       double id,
@@ -30,7 +30,7 @@ public class Work {
       DifficultyLevel difficultyLevel,
       String videoLink,
       double prerequisiteId,
-      Map<Skill, SkillLevel> skills) {
+      Map<Skill, SkillSuitability> skills) {
     this.id = id;
     this.name = name;
     this.composer = composer;
@@ -79,14 +79,14 @@ public class Work {
     return prerequisiteId;
   }
 
-  // returns the skill level for a given skill; MEDIUM if not defined
-  public SkillLevel getSkillLevel(Skill skill) {
-    return skills.getOrDefault(skill, SkillLevel.MEDIUM);
+  // returns the skill suitability for a given skill; MEDIUM if not defined
+  public SkillSuitability getSkillSuitability(Skill skill) {
+    return skills.getOrDefault(skill, SkillSuitability.MODERATE);
   }
 
   // Drools-friendly overload: accepts Object (avoids casts in DRL constraints)
-  public SkillLevel skillLevelFor(Object skill) {
-    return getSkillLevel((Skill) skill);
+  public SkillSuitability skillSuitabilityFor(Object skill) {
+    return getSkillSuitability((Skill) skill);
   }
 
   @Override

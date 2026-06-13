@@ -6,7 +6,7 @@ import org.sibac.bassoon.model.Accompaniment;
 import org.sibac.bassoon.model.DifficultyLevel;
 import org.sibac.bassoon.model.Era;
 import org.sibac.bassoon.model.Skill;
-import org.sibac.bassoon.model.SkillLevel;
+import org.sibac.bassoon.model.SkillSuitability;
 import org.sibac.bassoon.model.Work;
 
 import static java.util.Map.entry;
@@ -33,9 +33,9 @@ public final class TestWorks {
   /**
    * Catalog of 3 test works.
    *
-   * <p>Baroque Solo Piece: dif 4, BAROQUE, SOLO, TRILLS=HIGH, no prereq.
-   * Classical Piano Piece: dif 4, CLASSICAL, PIANO, LEGATO=HIGH, prereq = Baroque Solo.
-   * Romantic Orchestral Piece: dif 4, ROMANTIC, ORCHESTRA, DYNAMICS=AVOID, no prereq.
+   * <p>Baroque Solo Piece: dif 4, BAROQUE, SOLO, TRILLS=VERY_SUITABLE, no prereq.
+   * Classical Piano Piece: dif 4, CLASSICAL, PIANO, LEGATO=VERY_SUITABLE, prereq = Baroque Solo.
+   * Romantic Orchestral Piece: dif 4, ROMANTIC, ORCHESTRA, DYNAMICS=TOTALLY_UNSUITABLE, no prereq.
    */
   public static List<Work> catalog() {
     return List.of(
@@ -51,9 +51,9 @@ public final class TestWorks {
             "",
             -1,
             Map.ofEntries(
-                entry(Skill.TRILLS, SkillLevel.HIGH),
-                entry(Skill.LEGATO, SkillLevel.MEDIUM),
-                entry(Skill.STACCATO, SkillLevel.MEDIUM))),
+                entry(Skill.TRILLS, SkillSuitability.VERY_SUITABLE),
+                entry(Skill.LEGATO, SkillSuitability.MODERATE),
+                entry(Skill.STACCATO, SkillSuitability.MODERATE))),
 
         // id=20: medium, classical, piano -> passes fuzzy for intermediate and advanced; prereq=10
         new Work(
@@ -67,9 +67,9 @@ public final class TestWorks {
             "",
             ID_BAROQUE_SOLO,
             Map.ofEntries(
-                entry(Skill.TRILLS, SkillLevel.MEDIUM),
-                entry(Skill.LEGATO, SkillLevel.HIGH),
-                entry(Skill.STACCATO, SkillLevel.MEDIUM))),
+                entry(Skill.TRILLS, SkillSuitability.MODERATE),
+                entry(Skill.LEGATO, SkillSuitability.VERY_SUITABLE),
+                entry(Skill.STACCATO, SkillSuitability.MODERATE))),
 
         // id=30: medium, romantic, orchestra -> passes fuzzy for intermediate and advanced
         new Work(
@@ -83,8 +83,8 @@ public final class TestWorks {
             "",
             -1,
             Map.ofEntries(
-                entry(Skill.TRILLS, SkillLevel.HIGH),
-                entry(Skill.LEGATO, SkillLevel.HIGH),
-                entry(Skill.DYNAMICS, SkillLevel.AVOID))));
+                entry(Skill.TRILLS, SkillSuitability.VERY_SUITABLE),
+                entry(Skill.LEGATO, SkillSuitability.VERY_SUITABLE),
+                entry(Skill.DYNAMICS, SkillSuitability.TOTALLY_UNSUITABLE))));
   }
 }

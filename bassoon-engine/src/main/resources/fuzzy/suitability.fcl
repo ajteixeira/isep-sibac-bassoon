@@ -7,7 +7,7 @@
  *   - workDifficulty : difficulty of the work (from the Work model, 1..6)
  *
  * Output:
- *   - suitability : degree of suitability 0..1 (becomes the initial CF of the candidacy)
+ *   - suitability : degree of suitability 0..1 (entry gate; the candidacy CF starts neutral at 0.0)
  *
  * Domain expert rule (asymmetry): a work ONE LEVEL BELOW the student is more
  * acceptable than a work ONE LEVEL ABOVE. The difference is smooth, not a cutoff.
@@ -21,7 +21,7 @@ VAR_INPUT
 END_VAR
 
 VAR_OUTPUT
-    suitability : REAL;      // 0..1, becomes the initial candidacy CF
+    suitability : REAL;      // 0..1, used as the entry gate (not the candidacy CF seed)
 END_VAR
 
 // --- Student level fuzzification ---

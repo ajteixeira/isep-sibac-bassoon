@@ -8,7 +8,9 @@ import net.sourceforge.jFuzzyLogic.FIS;
  *
  * <p>Takes a student level (already adjusted by motivation, see
  * {@link StudentLevelMapper}) and a work difficulty, and returns a suitability
- * value between 0 and 1. That value becomes the initial CF of the work's candidacy.
+ * value between 0 and 1. That value is the entry gate for the work (threshold in
+ * {@link org.sibac.bassoon.RecommendationEngine}); the candidacy CF itself starts
+ * neutral at 0.0 and is built by the rules.
  *
  * <p>The FCL is loaded once in the constructor. Evaluation is {@code synchronized}
  * because the FIS object holds state between {@code setVariable} and {@code evaluate}.

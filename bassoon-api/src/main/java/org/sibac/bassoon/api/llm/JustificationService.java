@@ -133,14 +133,14 @@ public class JustificationService {
     if (request.getSkills() != null) {
       for (var s : request.getSkills()) {
         String label = PtLabels.skill(s.getSkill());
-        switch (work.getSkillLevel(s.getSkill())) {
+        switch (work.getSkillSuitability(s.getSkill())) {
           case REFERENCE -> facts.add("Excelente para " + label + " (obra de referencia).");
-          case HIGH -> facts.add("Muito boa para " + label + ".");
-          case MEDIUM_HIGH -> facts.add("Boa para " + label + ".");
-          case MEDIUM -> facts.add("Razoavel para " + label + ".");
-          case MEDIUM_LOW -> facts.add("Fraca para " + label + ".");
-          case LOW -> facts.add("Ma para " + label + ".");
-          case AVOID -> facts.add("Pessima para " + label + ".");
+          case VERY_SUITABLE -> facts.add("Muito boa para " + label + ".");
+          case SUITABLE -> facts.add("Boa para " + label + ".");
+          case MODERATE -> facts.add("Razoavel para " + label + ".");
+          case WEAK -> facts.add("Fraca para " + label + ".");
+          case UNSUITABLE -> facts.add("Ma para " + label + ".");
+          case TOTALLY_UNSUITABLE -> facts.add("Pessima para " + label + ".");
         }
       }
     }

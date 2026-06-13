@@ -13,7 +13,7 @@ import org.sibac.bassoon.model.DifficultyLevel;
 import org.sibac.bassoon.model.Era;
 import org.sibac.bassoon.model.Motivation;
 import org.sibac.bassoon.model.Skill;
-import org.sibac.bassoon.model.SkillLevel;
+import org.sibac.bassoon.model.SkillSuitability;
 import org.sibac.bassoon.model.StudentLevel;
 import org.sibac.bassoon.model.Work;
 import org.sibac.bassoon.output.Recommendation;
@@ -37,7 +37,7 @@ class RecommendationEngineTest {
   }
 
   /** Builds a dif-4 work with a single skill at the given level. */
-  private static Work work(double id, String name, Era era, Skill skill, SkillLevel level,
+  private static Work work(double id, String name, Era era, Skill skill, SkillSuitability level,
       double prerequisiteId) {
     return new Work(id, name, "Composer", era, "XX", Accompaniment.SOLO,
         DifficultyLevel.LEVEL_4, "", prerequisiteId, Map.of(skill, level));
@@ -50,7 +50,7 @@ class RecommendationEngineTest {
   @Test
   void allWorksPassForIntermediate() {
     // intermediate+neutral (3.5) with all dif 4: intermediate+medium=high -> ~0.63.
-    // Request TRILLS+LEGATO so every work has at least one HIGH skill and clears MIN.
+    // Request TRILLS+LEGATO so every work has at least one VERY_SUITABLE skill and clears MIN.
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
         StudentLevel.INTERMEDIATE, Motivation.NEUTRAL,
@@ -80,11 +80,11 @@ class RecommendationEngineTest {
   // -----------------------------------------------------------------------
 
   @Test
-  void higherSkillLevelRanksHigher() {
-    // REFERENCE (@CF 0.8) must outrank HIGH (@CF 0.5). Both survive the threshold.
-    // (Catalog works top out at HIGH, so purpose-built works are used here.)
-    Work ref = work(101.0, "Reference Work", Era.BAROQUE, Skill.TRILLS, SkillLevel.REFERENCE, -1);
-    Work high = work(102.0, "High Work", Era.CLASSICAL, Skill.TRILLS, SkillLevel.HIGH, -1);
+  void higherSkillSuitabilityRanksHigher() {
+    // REFERENCE (@CF 0.8) must outrank VERY_SUITABLE (@CF 0.5). Both survive the threshold.
+    // (Catalog works top out at VERY_SUITABLE, so purpose-built works are used here.)
+    Work ref = work(101.0, "Reference Work", Era.BAROQUE, Skill.TRILLS, SkillSuitability.REFERENCE, -1);
+    Work high = work(102.0, "High Work", Era.CLASSICAL, Skill.TRILLS, SkillSuitability.VERY_SUITABLE, -1);
 
     List<Recommendation> results = engine.run(
         List.of(ref, high),
@@ -96,13 +96,13 @@ class RecommendationEngineTest {
     int highIdx = indexOf(results, "High Work");
     assertTrue(refIdx >= 0 && highIdx >= 0, "Both works should survive the threshold");
     assertTrue(refIdx < highIdx,
-        "REFERENCE should outrank HIGH but got Ref@" + refIdx + ", High@" + highIdx);
+        "REFERENCE should outrank VERY_SUITABLE but got Ref@" + refIdx + ", High@" + highIdx);
   }
 
   @Test
   void weakSkillWorkDroppedBelowThreshold() {
-    // Classical Piece is only MEDIUM for TRILLS -> contribution 0.09, below MIN 0.30.
-    // With the neutral CF seed it is dropped; the HIGH-skill works survive.
+    // Classical Piece is only MODERATE for TRILLS -> contribution 0.09, below MIN 0.30.
+    // With the neutral CF seed it is dropped; the VERY_SUITABLE works survive.
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
         StudentLevel.ADVANCED, Motivation.NEUTRAL,
@@ -110,9 +110,9 @@ class RecommendationEngineTest {
         null, null);
 
     assertTrue(indexOf(results, TestWorks.CLASSICAL_PIANO) < 0,
-        "MEDIUM-skill work should fall below MIN and be dropped");
+        "MODERATE-skill work should fall below MIN and be dropped");
     assertTrue(indexOf(results, TestWorks.ROMANTIC_ORCH) >= 0,
-        "HIGH-skill work should survive");
+        "VERY_SUITABLE-skill work should survive");
   }
 
   // -----------------------------------------------------------------------
@@ -123,8 +123,8 @@ class RecommendationEngineTest {
   void eraPenaltyLowersBaroqueWork() {
     // Both works are REFERENCE for TRILLS -> same skill score. With last era = BAROQUE,
     // the Baroque work is penalised (and still survives) -> Romantic should rank first.
-    Work baroque = work(201.0, "Baroque Ref", Era.BAROQUE, Skill.TRILLS, SkillLevel.REFERENCE, -1);
-    Work romantic = work(202.0, "Romantic Ref", Era.ROMANTIC, Skill.TRILLS, SkillLevel.REFERENCE, -1);
+    Work baroque = work(201.0, "Baroque Ref", Era.BAROQUE, Skill.TRILLS, SkillSuitability.REFERENCE, -1);
+    Work romantic = work(202.0, "Romantic Ref", Era.ROMANTIC, Skill.TRILLS, SkillSuitability.REFERENCE, -1);
 
     List<Recommendation> results = engine.run(
         List.of(baroque, romantic),
@@ -148,7 +148,7 @@ class RecommendationEngineTest {
 
   @Test
   void accompanimentMatchBoostsPianoWork() {
-    // Classical Piano has PIANO accompaniment and LEGATO=HIGH (survives without preference).
+    // Classical Piano has PIANO accompaniment and LEGATO=VERY_SUITABLE (survives without preference).
     // With PIANO preference its score should be strictly higher.
     List<Recommendation> without = engine.run(
         TestWorks.catalog(),
@@ -179,9 +179,9 @@ class RecommendationEngineTest {
   @Test
   void prerequisiteMovesBeforeDependentWork() {
     // Dependent (REFERENCE, higher score) would come first; the prereq rule must move
-    // the lower-scored prerequisite (HIGH) up before it.
-    Work prereq = work(301.0, "Prereq", Era.BAROQUE, Skill.LEGATO, SkillLevel.HIGH, -1);
-    Work dependent = work(302.0, "Dependent", Era.CLASSICAL, Skill.LEGATO, SkillLevel.REFERENCE,
+    // the lower-scored prerequisite (VERY_SUITABLE) up before it.
+    Work prereq = work(301.0, "Prereq", Era.BAROQUE, Skill.LEGATO, SkillSuitability.VERY_SUITABLE, -1);
+    Work dependent = work(302.0, "Dependent", Era.CLASSICAL, Skill.LEGATO, SkillSuitability.REFERENCE,
         301.0);
 
     List<Recommendation> results = engine.run(
@@ -201,9 +201,9 @@ class RecommendationEngineTest {
 
   @Test
   void prerequisiteAlreadyBeforeDoesNotMove() {
-    // Prereq (REFERENCE) already outscores its dependent (HIGH), so it is already first.
-    Work prereq = work(311.0, "Prereq2", Era.BAROQUE, Skill.LEGATO, SkillLevel.REFERENCE, -1);
-    Work dependent = work(312.0, "Dependent2", Era.CLASSICAL, Skill.LEGATO, SkillLevel.HIGH,
+    // Prereq (REFERENCE) already outscores its dependent (VERY_SUITABLE), so it is already first.
+    Work prereq = work(311.0, "Prereq2", Era.BAROQUE, Skill.LEGATO, SkillSuitability.REFERENCE, -1);
+    Work dependent = work(312.0, "Dependent2", Era.CLASSICAL, Skill.LEGATO, SkillSuitability.VERY_SUITABLE,
         311.0);
 
     List<Recommendation> results = engine.run(
@@ -226,19 +226,19 @@ class RecommendationEngineTest {
   @Test
   void threeChainPrerequisitesOrdered() {
     // Chain: C requires B, B requires A.
-    // Skill scores: C (LEGATO=REFERENCE) > B (LEGATO=HIGH) > A (LEGATO=MEDIUM_HIGH).
+    // Skill scores: C (LEGATO=REFERENCE) > B (LEGATO=VERY_SUITABLE) > A (LEGATO=SUITABLE).
     // Evidence CF 1.0 keeps A at the 0.30 threshold (inclusive) so it survives.
     // Without the do-while fix a single backward pass would leave B before C
     // but A still after B — incorrect. The do-while iterates until stable.
     Work a = new Work(1.0, "Work A", "Composer", Era.BAROQUE, "DE",
         Accompaniment.SOLO, DifficultyLevel.LEVEL_4, "", -1,
-        Map.of(Skill.LEGATO, SkillLevel.MEDIUM_HIGH));
+        Map.of(Skill.LEGATO, SkillSuitability.SUITABLE));
     Work b = new Work(2.0, "Work B", "Composer", Era.CLASSICAL, "AT",
         Accompaniment.SOLO, DifficultyLevel.LEVEL_4, "", 1.0,
-        Map.of(Skill.LEGATO, SkillLevel.HIGH));
+        Map.of(Skill.LEGATO, SkillSuitability.VERY_SUITABLE));
     Work c = new Work(3.0, "Work C", "Composer", Era.ROMANTIC, "FR",
         Accompaniment.SOLO, DifficultyLevel.LEVEL_4, "", 2.0,
-        Map.of(Skill.LEGATO, SkillLevel.REFERENCE));
+        Map.of(Skill.LEGATO, SkillSuitability.REFERENCE));
 
     List<Recommendation> results = engine.run(
         List.of(a, b, c),

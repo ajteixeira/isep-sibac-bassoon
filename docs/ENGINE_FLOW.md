@@ -280,10 +280,10 @@ Depois chama `kSession.fireAllRules()`.
 
 #### 2.5.1 Anatomia de uma regra de skill
 
-Cada nível de skill tem a sua regra. Exemplo — `skill HIGH`:
+Cada nível de skill tem a sua regra. Exemplo — `skill VERY_SUITABLE`:
 
 ```drl
-rule "skill HIGH"
+rule "skill VERY_SUITABLE"
 @CF(0.5)                     ← CF da regra (contribuição máxima se evidência CF=1.0)
 lock-on-active true          ← evita reativações quando o facto Hypothesis é updated
 when
@@ -292,7 +292,7 @@ when
               || description == EvidenceType.SKILL_3,
               $skill : value )          ← a skill que o professor pediu
     Work( $name : name,
-          skillLevelFor($skill) == SkillLevel.HIGH )  ← a obra tem HIGH nessa skill
+          skillSuitabilityFor($skill) == SkillSuitability.VERY_SUITABLE )  ← a obra é VERY_SUITABLE nessa skill
 then
     Hypothesis $h = TrackingAgendaListener.getFactRef(
         Hypothesis.class, "candidate", $name);
@@ -300,8 +300,9 @@ then
 end
 ```
 
-O padrão repete-se para todos os 7 níveis de `SkillLevel` (REFERENCE, HIGH,
-MEDIUM_HIGH, MEDIUM, MEDIUM_LOW, LOW, AVOID), cada um com o seu `@CF`.
+O padrão repete-se para todos os 7 níveis de `SkillSuitability` (REFERENCE,
+VERY_SUITABLE, SUITABLE, MODERATE, WEAK, UNSUITABLE, TOTALLY_UNSUITABLE), cada um
+com o seu `@CF`.
 
 #### 2.5.2 Como o `$h.update()` funciona
 
@@ -342,7 +343,7 @@ public static double combine(double oldCf, double newCf) {
 **Exemplo de propagação:**
 
 Obra com CF inicial 0.0 (neutro). Professor pediu `LEGATO` (CF 0.9). A obra tem
-`LEGATO = HIGH` (@CF 0.5).
+`LEGATO = VERY_SUITABLE` (@CF 0.5).
 
 ```
 contribuição = min(0.9) × 0.5 = 0.45
@@ -350,7 +351,7 @@ CF novo = 0.0 + 0.45 × (1 - 0.0) = 0.45
 ```
 
 Depois o professor também pediu `STACCATO` (CF 0.7). A obra tem
-`STACCATO = MEDIUM` (@CF 0.1).
+`STACCATO = MODERATE` (@CF 0.1).
 
 ```
 contribuição = min(0.7) × 0.1 = 0.07
@@ -386,12 +387,12 @@ CF novo = 0.269 + 0.40 × (1 - 0.269) = 0.269 + 0.292 = 0.562
 | Regra | `@CF` | Ficheiro | Quando dispara |
 |---|---|---|---|
 | `skill REFERENCE` | +0.8 | `skills_rules.drl` | Obra é referência para skill pedida |
-| `skill HIGH` | +0.5 | `skills_rules.drl` | Obra é muito boa para skill pedida |
-| `skill MEDIUM_HIGH` | +0.3 | `skills_rules.drl` | Obra é boa para skill pedida |
-| `skill MEDIUM` | +0.1 | `skills_rules.drl` | Obra trabalha a skill |
-| `skill MEDIUM_LOW` | -0.1 | `skills_rules.drl` | Obra é fraca para skill pedida |
-| `skill LOW` | -0.4 | `skills_rules.drl` | Obra é má para skill pedida |
-| `skill AVOID` | -0.8 | `skills_rules.drl` | Obra é péssima para skill pedida |
+| `skill VERY_SUITABLE` | +0.5 | `skills_rules.drl` | Obra é muito boa para skill pedida |
+| `skill SUITABLE` | +0.3 | `skills_rules.drl` | Obra é boa para skill pedida |
+| `skill MODERATE` | +0.1 | `skills_rules.drl` | Obra trabalha a skill |
+| `skill WEAK` | -0.1 | `skills_rules.drl` | Obra é fraca para skill pedida |
+| `skill UNSUITABLE` | -0.4 | `skills_rules.drl` | Obra é má para skill pedida |
+| `skill TOTALLY_UNSUITABLE` | -0.8 | `skills_rules.drl` | Obra é péssima para skill pedida |
 | `era penalty` | -0.3 | `last_era_rules.drl` | Época = última estudada |
 | `accompaniment match` | +0.5 | `accompaniment_rules.drl` | Acompanhamento = preferido |
 
@@ -409,7 +410,7 @@ MIN_RECOMMENDATION_SCORE = 0.30
 ```
 
 Obras com CF final < 0.30 são descartadas. Remove ruído — obras que passaram
-o fuzzy mas foram penalizadas pelas regras (ex: skills AVOID/LOW) ou que só
+o fuzzy mas foram penalizadas pelas regras (ex: skills TOTALLY_UNSUITABLE/UNSUITABLE) ou que só
 reuniram evidência positiva fraca. Como o CF arranca neutro (0.0, §2.4), uma obra
 cuja única evidência é uma skill `MEDIUM` (contribuição ≈ 0.09) fica abaixo do
 limiar e cai — é intencional: sem evidência relevante, não há recomendação forte.
@@ -445,12 +446,12 @@ Para cada obra recomendada, o serviço constrói factos em Português:
 |---|---|
 | Dificuldade | `Dificuldade 4/6.` |
 | Skill (REFERENCE) | `Excelente para Legato (obra de referencia).` |
-| Skill (HIGH) | `Muito boa para Staccato.` |
-| Skill (MEDIUM_HIGH) | `Boa para Coordenacao.` |
-| Skill (MEDIUM) | `Razoavel para Trilos.` |
-| Skill (MEDIUM_LOW) | `Fraca para Flicking.` |
-| Skill (LOW) | `Ma para Dinamicas.` |
-| Skill (AVOID) | `Pessima para Tecnicas contemporaneas.` |
+| Skill (VERY_SUITABLE) | `Muito boa para Staccato.` |
+| Skill (SUITABLE) | `Boa para Coordenacao.` |
+| Skill (MODERATE) | `Razoavel para Trilos.` |
+| Skill (WEAK) | `Fraca para Flicking.` |
+| Skill (UNSUITABLE) | `Ma para Dinamicas.` |
+| Skill (TOTALLY_UNSUITABLE) | `Pessima para Tecnicas contemporaneas.` |
 | Acompanhamento (match) | `Acompanhamento Orquestra (preferido pelo professor).` |
 | Acompanhamento (mismatch) | `Acompanhamento Piano — diferente do preferido (Orquestra).` |
 | Época (igual) | `ATENCAO: Barroco — mesma epoca da ultima obra. Perdeu prioridade.` |
@@ -499,9 +500,9 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 
 | Classe | Descrição |
 |---|---|
-| `Work` | Obra do catálogo. Campos: id, name, composer, era, country, accompaniment, difficultyLevel, videoLink, prerequisiteId, `Map<Skill, SkillLevel>` |
+| `Work` | Obra do catálogo. Campos: id, name, composer, era, country, accompaniment, difficultyLevel, videoLink, prerequisiteId, `Map<Skill, SkillSuitability>` |
 | `Skill` | Enum com 24 competências, organizadas em 7 grupos (Articulação, Registo, Tempo, Controlo do som, Desafios técnicos, Ritmo, Carácter) |
-| `SkillLevel` | Enum com 7 níveis: `REFERENCE`, `HIGH`, `MEDIUM_HIGH`, `MEDIUM`, `MEDIUM_LOW`, `LOW`, `AVOID` |
+| `SkillSuitability` | Enum de adequação com 7 níveis: `REFERENCE`, `VERY_SUITABLE`, `SUITABLE`, `MODERATE`, `WEAK`, `UNSUITABLE`, `TOTALLY_UNSUITABLE` |
 | `StudentLevel` | `BEGINNER`, `INTERMEDIATE`, `ADVANCED` |
 | `Motivation` | `LOW`, `NEUTRAL`, `HIGH` |
 | `Era` | `BAROQUE`, `CLASSICAL`, `ROMANTIC`, `CONTEMPORARY`, `OTHER` |
@@ -545,17 +546,17 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 
 ## 4. Classes da API (bassoon-api)
 
-| Classe | Descrição |
-|---|---|
-| `BassoonApiApplication` | `@SpringBootApplication` — entry point |
-| `RecommendationController` | `@RestController`. `POST /recommend` — recebe `RecommendationRequest`, devolve `RecommendationResponse`. CORS aberto para dev (localhost:5173) |
-| `DroolsService` | Converte DTO → inputs do motor, corre `engine.run()`, enriquece com metadados do `WorkCatalog` |
-| `WorkCatalog` | Carrega `KnowledgeBase.works()`. Indexado por ID: `byId(double)`. Partilhado por `DroolsService` e `JustificationService` |
-| `JustificationService` | Constrói factos, chama LLM, pós-processa. Injetado com `WorkCatalog` e `GroqClient` |
-| `GroqClient` | HTTP client para Groq API. `generateJson(systemInstruction, userPrompt)` devolve String |
-| `PtLabels` | Etiquetas PT para enums: `skill()`, `skillLevelPhrase()`, `era()`, `accompaniment()` |
-| `RecommendationRequest` | DTO de entrada (Lombok `@Data`). Contém inner classes `SkillPreference` e `AccompanimentPreference` |
-| `RecommendationResponse` | DTO de saída (Lombok `@Data`). Contém inner class `RecommendedWork` |
+| Classe | Descrição                                                                                                                                      |
+|---|------------------------------------------------------------------------------------------------------------------------------------------------|
+| `BassoonApiApplication` | `@SpringBootApplication` — entry point                                                                                                         |
+| `RecommendationController` | `@RestController`. `POST /recommend` — recebe `RecommendationRequest`, devolve `RecommendationResponse`. CORS para dev (localhost:5173 e :3000) |
+| `DroolsService` | Converte DTO → inputs do motor, corre `engine.run()`, enriquece com metadados do `WorkCatalog`                                                 |
+| `WorkCatalog` | Carrega `KnowledgeBase.works()`. Indexado por ID: `byId(double)`. Partilhado por `DroolsService` e `JustificationService`                      |
+| `JustificationService` | Constrói factos, chama LLM, pós-processa. Injetado com `WorkCatalog` e `GroqClient`                                                            |
+| `GroqClient` | HTTP client para Groq API. `generateJson(systemInstruction, userPrompt)` devolve String                                                        |
+| `PtLabels` | Etiquetas PT para enums: `skill()`, `era()`, `accompaniment()`, `difficulty()`. A frase por nível de adequação ("Muito boa para…") é construída inline no `switch` do `JustificationService.factsFor`, não aqui |
+| `RecommendationRequest` | DTO de entrada (Lombok `@Data`). Contém inner classes `SkillPreference` e `AccompanimentPreference`                                            |
+| `RecommendationResponse` | DTO de saída (Lombok `@Data`). Contém inner class `RecommendedWork`                                                                            |
 
 ---
 
@@ -574,26 +575,26 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 | Regra | CF | Ficheiro |
 |---|---|---|
 | `skill REFERENCE` | +0.8 | `skills_rules.drl` |
-| `skill HIGH` | +0.5 | `skills_rules.drl` |
-| `skill MEDIUM_HIGH` | +0.3 | `skills_rules.drl` |
-| `skill MEDIUM` | +0.1 | `skills_rules.drl` |
-| `skill MEDIUM_LOW` | -0.1 | `skills_rules.drl` |
-| `skill LOW` | -0.4 | `skills_rules.drl` |
-| `skill AVOID` | -0.8 | `skills_rules.drl` |
+| `skill VERY_SUITABLE` | +0.5 | `skills_rules.drl` |
+| `skill SUITABLE` | +0.3 | `skills_rules.drl` |
+| `skill MODERATE` | +0.1 | `skills_rules.drl` |
+| `skill WEAK` | -0.1 | `skills_rules.drl` |
+| `skill UNSUITABLE` | -0.4 | `skills_rules.drl` |
+| `skill TOTALLY_UNSUITABLE` | -0.8 | `skills_rules.drl` |
 | `era penalty` | -0.3 | `last_era_rules.drl` |
 | `accompaniment match` | +0.5 | `accompaniment_rules.drl` |
 
-### 5.3 Conversão Excel → SkillLevel (v5, opção A)
+### 5.3 Conversão Excel → SkillSuitability (v5, opção A)
 
 | Intervalo original | Nível |
 |---|---|
 | +0.8 a +1.0 | `REFERENCE` |
-| +0.6 a +0.7 | `HIGH` |
-| +0.4 a +0.5 | `MEDIUM_HIGH` |
-| +0.1 a +0.3 | `MEDIUM` |
-| -0.2 a 0.0 | `MEDIUM_LOW` |
-| -0.6 a -0.3 | `LOW` |
-| -1.0 a -0.7 | `AVOID` |
+| +0.6 a +0.7 | `VERY_SUITABLE` |
+| +0.4 a +0.5 | `SUITABLE` |
+| +0.1 a +0.3 | `MODERATE` |
+| -0.2 a 0.0 | `WEAK` |
+| -0.6 a -0.3 | `UNSUITABLE` |
+| -1.0 a -0.7 | `TOTALLY_UNSUITABLE` |
 
 ---
 
@@ -750,10 +751,10 @@ compiladas em memória).
 ### 9.7 "Como é que o sistema lida com uma obra sem avaliação para uma skill?"
 
 Se o perito não avaliou um par (obra, skill) na base de conhecimento, o método
-`Work.getSkillLevel(skill)` devolve **`MEDIUM`** por omissão:
+`Work.getSkillSuitability(skill)` devolve **`MEDIUM`** por omissão:
 
 ```java
-return skills.getOrDefault(skill, SkillLevel.MEDIUM);
+return skills.getOrDefault(skill, SkillSuitability.MODERATE);
 ```
 
 Isto significa que a obra recebe um boost neutro baixo (+0.1 CF) para essa skill — nem

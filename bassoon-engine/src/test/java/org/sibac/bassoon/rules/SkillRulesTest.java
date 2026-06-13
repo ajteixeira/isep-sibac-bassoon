@@ -16,15 +16,16 @@ import org.sibac.bassoon.model.Evidence;
 import org.sibac.bassoon.model.EvidenceType;
 import org.sibac.bassoon.model.Hypothesis;
 import org.sibac.bassoon.model.Skill;
-import org.sibac.bassoon.model.SkillLevel;
+import org.sibac.bassoon.model.SkillSuitability;
 import org.sibac.bassoon.model.Work;
 
 /**
  * Tests the skill rules on the example work (Telemann, Sonata in F minor).
- * Verifies the direction of each SkillLevel's effect on the candidate CF.
+ * Verifies the direction of each SkillSuitability level's effect on the candidate CF.
  *
- * <p>Skill levels on the test work: TRILLS=HIGH, LEGATO=MEDIUM, DYNAMICS=AVOID,
- * STACCATO=MEDIUM. REFERENCE is not tested because the current work has no skill at that level.
+ * <p>Suitability on the test work: TRILLS=VERY_SUITABLE, LEGATO=MODERATE,
+ * DYNAMICS=TOTALLY_UNSUITABLE, STACCATO=MODERATE. REFERENCE is not tested because the
+ * current work has no skill at that level.
  */
 class SkillRulesTest {
 
@@ -48,77 +49,77 @@ class SkillRulesTest {
   }
 
   @Test
-  void highLevelRaisesCandidate() {
-    // TRILLS is HIGH on the work (positive) -> should rise
+  void verySuitableRaisesCandidate() {
+    // TRILLS is VERY_SUITABLE on the work (positive) -> should rise
     double seed = 0.0;
     double cf = candidateCf(TestWorks.catalog().get(0), Skill.TRILLS, 0.9, seed);
-    assertTrue(cf > seed, "HIGH skill should raise CF above " + seed + " but was " + cf);
+    assertTrue(cf > seed, "VERY_SUITABLE should raise CF above " + seed + " but was " + cf);
   }
 
   @Test
-  void mediumLevelRaisesCandidateLess() {
-    // LEGATO is MEDIUM (@CF 0.1) -> rises, but less than HIGH
+  void moderateRaisesCandidateLess() {
+    // LEGATO is MODERATE (@CF 0.1) -> rises, but less than VERY_SUITABLE
     double seed = 0.0;
     double cf = candidateCf(TestWorks.catalog().get(0), Skill.LEGATO, 0.9, seed);
-    assertTrue(cf > seed, "MEDIUM skill should raise CF above " + seed + " but was " + cf);
+    assertTrue(cf > seed, "MODERATE should raise CF above " + seed + " but was " + cf);
   }
 
   @Test
-  void highBeatsMedium() {
-    // HIGH (@CF 0.5) should contribute more than MEDIUM (@CF 0.1)
-    double cfHigh = candidateCf(TestWorks.catalog().get(0), Skill.TRILLS, 0.9, 0.0);
-    double cfMedium = candidateCf(TestWorks.catalog().get(0), Skill.LEGATO, 0.9, 0.0);
-    assertTrue(cfHigh > cfMedium,
-        "HIGH (" + cfHigh + ") should outrank MEDIUM (" + cfMedium + ")");
+  void verySuitableBeatsModerate() {
+    // VERY_SUITABLE (@CF 0.5) should contribute more than MODERATE (@CF 0.1)
+    double cfVerySuitable = candidateCf(TestWorks.catalog().get(0), Skill.TRILLS, 0.9, 0.0);
+    double cfModerate = candidateCf(TestWorks.catalog().get(0), Skill.LEGATO, 0.9, 0.0);
+    assertTrue(cfVerySuitable > cfModerate,
+        "VERY_SUITABLE (" + cfVerySuitable + ") should outrank MODERATE (" + cfModerate + ")");
   }
 
   @Test
-  void avoidLevelPenalizesCandidate() {
-    // DYNAMICS is AVOID (negative) -> should drop
+  void totallyUnsuitablePenalizesCandidate() {
+    // DYNAMICS is TOTALLY_UNSUITABLE (negative) -> should drop
     double seed = 0.0;
     double cf = candidateCf(TestWorks.catalog().get(2), Skill.DYNAMICS, 0.9, seed);
-    assertTrue(cf < seed, "AVOID skill should drop CF below " + seed + " but was " + cf);
+    assertTrue(cf < seed, "TOTALLY_UNSUITABLE should drop CF below " + seed + " but was " + cf);
   }
 
   @Test
-  void mediumLevelChangesCandidateSlightly() {
-    // STACCATO is MEDIUM (positive) -> small contribution
+  void moderateChangesCandidateSlightly() {
+    // STACCATO is MODERATE (positive) -> small contribution
     double seed = 0.5;
     double cf = candidateCf(TestWorks.catalog().get(0), Skill.STACCATO, 0.9, seed);
-    assertTrue(cf > seed, "MEDIUM skill should raise CF slightly above " + seed + " but was " + cf);
-    assertTrue(cf < seed + 0.1, "MEDIUM contribution should be small");
+    assertTrue(cf > seed, "MODERATE should raise CF slightly above " + seed + " but was " + cf);
+    assertTrue(cf < seed + 0.1, "MODERATE contribution should be small");
   }
 
   @Test
-  void avoidPenalizesEvenWithPositiveSeed() {
-    // candidate already positive -> NONE should reduce the CF
+  void totallyUnsuitablePenalizesEvenWithPositiveSeed() {
+    // candidate already positive -> TOTALLY_UNSUITABLE should reduce the CF
     double seed = 0.6;
     double cf = candidateCf(TestWorks.catalog().get(2), Skill.DYNAMICS, 0.9, seed);
     assertTrue(cf < seed,
-        "NONE should reduce CF from " + seed + " but was " + cf);
+        "TOTALLY_UNSUITABLE should reduce CF from " + seed + " but was " + cf);
   }
 
   @Test
-  void highOnTopOfExistingCf() {
-    // HIGH with positive seed -> CF should rise further
+  void verySuitableOnTopOfExistingCf() {
+    // VERY_SUITABLE with positive seed -> CF should rise further
     double seed = 0.4;
     double cf = candidateCf(TestWorks.catalog().get(0), Skill.TRILLS, 0.9, seed);
     assertTrue(cf > seed,
-        "HIGH should raise CF above seed " + seed + " but was " + cf);
+        "VERY_SUITABLE should raise CF above seed " + seed + " but was " + cf);
   }
 
   @Test
-  void referenceRaisesMoreThanHigh() {
-    // REFERENCE (@CF 0.65) contributes more than HIGH (@CF 0.55).
-    // Classical Piano has LEGATO=HIGH; the reference work has LEGATO=REFERENCE.
+  void referenceRaisesMoreThanVerySuitable() {
+    // REFERENCE (@CF 0.8) contributes more than VERY_SUITABLE (@CF 0.5).
+    // Classical Piano has LEGATO=VERY_SUITABLE; the reference work has LEGATO=REFERENCE.
     Work referenceWork = new Work(99.0, "Reference Work", "Composer",
         Era.BAROQUE, "DE", Accompaniment.SOLO, DifficultyLevel.LEVEL_4, "", -1,
-        Map.of(Skill.LEGATO, SkillLevel.REFERENCE));
+        Map.of(Skill.LEGATO, SkillSuitability.REFERENCE));
 
-    double cfRef  = candidateCf(referenceWork, Skill.LEGATO, 0.9, 0.0);
-    double cfHigh = candidateCf(TestWorks.catalog().get(1), Skill.LEGATO, 0.9, 0.0);
+    double cfRef = candidateCf(referenceWork, Skill.LEGATO, 0.9, 0.0);
+    double cfVerySuitable = candidateCf(TestWorks.catalog().get(1), Skill.LEGATO, 0.9, 0.0);
 
-    assertTrue(cfRef > cfHigh,
-        "REFERENCE (" + cfRef + ") should raise CF more than HIGH (" + cfHigh + ")");
+    assertTrue(cfRef > cfVerySuitable,
+        "REFERENCE (" + cfRef + ") should raise CF more than VERY_SUITABLE (" + cfVerySuitable + ")");
   }
 }

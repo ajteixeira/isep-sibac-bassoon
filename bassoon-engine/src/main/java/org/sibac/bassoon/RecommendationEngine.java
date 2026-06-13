@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  *   <li>Reorder to satisfy prerequisites
  * </ol>
  *
- * <p>Used by {@code Main} (standalone) and {@code DroolsService} (REST API).
+ * <p>Used by {@code DroolsService} (the REST API service).
  */
 public class RecommendationEngine {
 
