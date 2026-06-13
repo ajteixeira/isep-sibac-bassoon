@@ -2,6 +2,9 @@
 // Labels - PT
 // ---------------------------------------------------------------------------
 
+// Default certainty factor when the teacher adds a skill / accompaniment
+export const DEFAULT_CF = 0.75
+
 // Anchor marks for the continuous level slider (1.5–5.5 axis).
 export const NIVEIS = [
   { value: 1.5, label: 'Iniciante' },
@@ -106,6 +109,10 @@ export const ACOMPANHAMENTOS = [
   { id: 'BASSO_CONTINUO', label: 'Baixo contínuo' },
   { id: 'ORCHESTRA',      label: 'Orquestra' },
 ]
+
+// id -> label lookups (fall back to the id if unknown)
+export const eraLabel = (id) => EPOCAS.find((e) => e.id === id)?.label ?? id
+export const acompLabel = (id) => ACOMPANHAMENTOS.find((a) => a.id === id)?.label ?? id
 
 // Quick lookup: id -> { label, groupId, groupTitle }
 export const COMP_BY_ID = (() => {

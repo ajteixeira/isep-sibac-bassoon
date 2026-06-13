@@ -39,7 +39,7 @@ class LastEraRulesTest {
     Work work = KnowledgeBase.works().get(0);
     session.insert(work);
 
-    Hypothesis candidate = new Hypothesis("candidate", work.getName(), seedCf);
+    Hypothesis candidate = new Hypothesis(Hypothesis.CANDIDATE, work.getName(), seedCf);
     session.insert(candidate);
     session.insert(new Evidence(EvidenceType.LAST_ERA, lastEra));
 

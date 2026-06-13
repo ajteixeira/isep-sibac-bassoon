@@ -25,14 +25,9 @@ export default function FooterNav({
         {onNext && (
           <button
             type="button"
-            className="btn btn-primary"
+            className={`btn btn-primary ${nextEmphatic ? 'btn-emphatic' : ''}`}
             onClick={onNext}
             disabled={nextDisabled}
-            style={
-              nextEmphatic
-                ? { background: 'var(--accent)', borderColor: 'var(--accent)' }
-                : undefined
-            }
           >
             {nextLabel || 'seguinte →'}
           </button>

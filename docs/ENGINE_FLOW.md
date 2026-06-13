@@ -414,7 +414,7 @@ MIN_RECOMMENDATION_SCORE = 0.30
 Obras com CF final < 0.30 são descartadas. Remove ruído — obras que passaram
 o fuzzy mas foram penalizadas pelas regras (ex: skills TOTALLY_UNSUITABLE/UNSUITABLE) ou que só
 reuniram evidência positiva fraca. Como o CF arranca neutro (0.0, §2.4), uma obra
-cuja única evidência é uma skill `MEDIUM` (contribuição ≈ 0.09) fica abaixo do
+cuja única evidência é uma skill `MODERATE` (contribuição ≈ 0.09) fica abaixo do
 limiar e cai — é intencional: sem evidência relevante, não há recomendação forte.
 
 #### 2.6.3 Pré-requisitos
@@ -446,7 +446,7 @@ Para cada obra recomendada, o serviço constrói factos em Português:
 
 | Facto | Exemplo |
 |---|---|
-| Dificuldade | `Dificuldade 4/6.` |
+| Dificuldade | `Dificuldade exigente.` (rótulo PT via `PtLabels.difficulty`, ex. 4→exigente) |
 | Skill (REFERENCE) | `Excelente para Legato (obra de referencia).` |
 | Skill (VERY_SUITABLE) | `Muito boa para Staccato.` |
 | Skill (SUITABLE) | `Boa para Coordenacao.` |
@@ -540,7 +540,7 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 
 | Classe | Descrição |
 |---|---|
-| `Recommendation` | Obra recomendada: workId, workName, score (CF final), initialScore (suitability), justification, firedRules |
+| `Recommendation` | Obra recomendada: workId, workName, score (CF final), initialScore (suitability), firedRules. A justificação NÃO está aqui — é gerada pelo LLM e vive no DTO `RecommendedWork` |
 | `FiredRule` | Regra que disparou: name, cf, category (SKILL/ACCOMPANIMENT/ERA), detail |
 
 ---
@@ -743,7 +743,7 @@ compiladas em memória).
 ### 9.7 "Como é que o sistema lida com uma obra sem avaliação para uma skill?"
 
 Se o perito não avaliou um par (obra, skill) na base de conhecimento, o método
-`Work.getSkillSuitability(skill)` devolve **`MEDIUM`** por omissão:
+`Work.getSkillSuitability(skill)` devolve **`MODERATE`** por omissão:
 
 ```java
 return skills.getOrDefault(skill, SkillSuitability.MODERATE);

@@ -220,7 +220,6 @@ public class JustificationService {
         .replace("alem disso, ", "")
         .replace("no entanto, ", "")
         .replace("por outro lado, ", "")
-        .replace("interessante", "util")
         .replace("  ", " ");
     text = text.replaceAll("(?i)convem estudar com um professor[^.]*\\.?\\s*", "");
     text = text.replaceAll("(?i)estudar com um professor[^.]*\\.?\\s*", "");

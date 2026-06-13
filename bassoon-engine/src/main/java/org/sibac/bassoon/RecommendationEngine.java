@@ -82,6 +82,7 @@ public class RecommendationEngine {
     kSession.addEventListener(new FactListener());
 
     Map<Double, Work> worksById = indexById(catalog);
+    Map<String, Work> worksByName = indexByName(catalog);
 
     // --- fuzzy front-end ---
     double fuzzyLevel = StudentLevelMapper.toStudentLevel(studentLevel, motivation);
@@ -97,7 +98,7 @@ public class RecommendationEngine {
 
       if (suitability >= SUITABILITY_THRESHOLD) {
         kSession.insert(work);
-        kSession.insert(new Hypothesis("candidate", work.getName(), 0.0));
+        kSession.insert(new Hypothesis(Hypothesis.CANDIDATE, work.getName(), 0.0));
         initialScores.put(work.getName(), suitability);
         inserted++;
       } else {
@@ -150,14 +151,15 @@ public class RecommendationEngine {
 
     List<Recommendation> recommendations = new ArrayList<>();
     for (Hypothesis h : candidates) {
-      if (!"candidate".equals(h.getDescription())) {
+      if (!Hypothesis.CANDIDATE.equals(h.getDescription())) {
         continue;
       }
       List<FiredRule> firedRules = RuleFiredTracker.getRules(h);
       double initialScore = initialScores.getOrDefault(h.getValue(), h.getCf());
-      double wid = findIdByName(worksById, h.getValue());
-      recommendations.add(new Recommendation(wid, h.getValue(), h.getCf(), initialScore,
-          "CF=" + String.format("%.3f", h.getCf()), firedRules));
+      Work hWork = worksByName.get(h.getValue());
+      double wid = (hWork != null) ? hWork.getId() : -1;
+      recommendations.add(
+          new Recommendation(wid, h.getValue(), h.getCf(), initialScore, firedRules));
     }
 
     RuleFiredTracker.clear();
@@ -205,7 +207,8 @@ public class RecommendationEngine {
           result.remove(prereqRec);
           result.add(i, prereqRec);
           moved = true;
-          LOG.info("R7: {} (prerequisite of {}) moved up", prereq.getName(), work.getName());
+          LOG.info("Prerequisite reorder: {} moved up before {}", prereq.getName(),
+              work.getName());
         }
       }
     } while (moved);
@@ -225,6 +228,14 @@ public class RecommendationEngine {
     return map;
   }
 
+  private static Map<String, Work> indexByName(List<Work> works) {
+    Map<String, Work> map = new HashMap<>();
+    for (Work w : works) {
+      map.put(w.getName(), w);
+    }
+    return map;
+  }
+
   private static Recommendation findById(List<Recommendation> list, double id) {
     for (Recommendation r : list) {
       if (r.getWorkId() == id) {
@@ -232,15 +243,6 @@ public class RecommendationEngine {
       }
     }
     return null;
-  }
-
-  private static double findIdByName(Map<Double, Work> catalog, String name) {
-    for (Work w : catalog.values()) {
-      if (w.getName().equals(name)) {
-        return w.getId();
-      }
-    }
-    return -1;
   }
 
   // -----------------------------------------------------------------------

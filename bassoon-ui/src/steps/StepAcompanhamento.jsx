@@ -1,4 +1,4 @@
-import { ACOMPANHAMENTOS } from '../labels'
+import { ACOMPANHAMENTOS, DEFAULT_CF } from '../labels'
 import CFRange from '../components/CFRange'
 import FooterNav from '../components/FooterNav'
 
@@ -12,7 +12,7 @@ export default function StepAcompanhamento({ state, set, onNext, onBack }) {
     if (isSelected(id)) {
       set({ acompanhamentos: selected.filter((a) => a.id !== id) })
     } else {
-      set({ acompanhamentos: [...selected, { id, cf: 0.75 }] })
+      set({ acompanhamentos: [...selected, { id, cf: DEFAULT_CF }] })
     }
   }
 

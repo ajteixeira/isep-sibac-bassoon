@@ -1,4 +1,4 @@
-import { COMP_GROUPS, COMP_BY_ID } from '../labels'
+import { COMP_GROUPS, COMP_BY_ID, DEFAULT_CF } from '../labels'
 import CFRange from '../components/CFRange'
 import FooterNav from '../components/FooterNav'
 
@@ -12,7 +12,7 @@ export default function StepCompetencias({ state, set, onNext, onBack }) {
     if (idx >= 0) {
       set({ competencias: list.filter((c) => c.id !== id) })
     } else if (list.length < 3) {
-      set({ competencias: [...list, { id, cf: 0.75 }] })
+      set({ competencias: [...list, { id, cf: DEFAULT_CF }] })
     }
   }
 

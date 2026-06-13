@@ -6,7 +6,9 @@ import java.util.List;
  * A recommended work produced by the engine.
  *
  * <p>Built from {@code Hypothesis} candidacies after {@code fireAllRules()},
- * with combined CFs and the rules that fired.
+ * with combined CFs and the rules that fired. The pedagogical justification is
+ * NOT part of this object — it is generated later by the LLM and lives on the
+ * API response DTO ({@code RecommendedWork}).
  */
 public class Recommendation {
 
@@ -14,17 +16,15 @@ public class Recommendation {
   private final String workName;
   private final double score;
   private final double initialScore;
-  private final String justification;
   private final List<FiredRule> firedRules;
 
   public Recommendation(
       double workId, String workName, double score, double initialScore,
-      String justification, List<FiredRule> firedRules) {
+      List<FiredRule> firedRules) {
     this.workId = workId;
     this.workName = workName;
     this.score = score;
     this.initialScore = initialScore;
-    this.justification = justification;
     this.firedRules = List.copyOf(firedRules);
   }
 
@@ -44,21 +44,12 @@ public class Recommendation {
     return initialScore;
   }
 
-  public String getJustification() {
-    return justification;
-  }
-
   public List<FiredRule> getFiredRules() {
     return firedRules;
   }
 
   @Override
   public String toString() {
-    return "Recommendation["
-        + workName
-        + ", score="
-        + String.format("%.3f", score)
-        + "]\n  "
-        + justification;
+    return "Recommendation[" + workName + ", score=" + String.format("%.3f", score) + "]";
   }
 }

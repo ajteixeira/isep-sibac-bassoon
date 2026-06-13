@@ -15,7 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * Integration tests for POST /recommend.
  *
- * <p>JustificationService is mocked to avoid real Groq API calls.
+ * <p>JustificationService is mocked so the tests never call the real Groq API
+ * (no network, no key needed) — they exercise the controller + validation + engine only.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -24,10 +25,30 @@ class RecommendationControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
+  // mocked: avoids a real Groq call; fillJustifications becomes a no-op
+  @MockBean
+  private JustificationService justificationService;
+
   @Test
   void missingStudentLevelReturns400() throws Exception {
     String body = """
         {"skills": [], "motivation": "NEUTRAL"}
+        """;
+    mockMvc.perform(post("/recommend")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void outOfRangeStudentLevelReturns400() throws Exception {
+    // studentLevel must be within [1.5, 5.5] (@DecimalMin/@DecimalMax on the DTO)
+    String body = """
+        {
+          "studentLevel": 9.0,
+          "motivation": "NEUTRAL",
+          "skills": [{"skill": "LEGATO", "cf": 0.9}]
+        }
         """;
     mockMvc.perform(post("/recommend")
             .contentType(MediaType.APPLICATION_JSON)
