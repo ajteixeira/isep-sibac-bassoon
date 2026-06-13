@@ -1,10 +1,9 @@
-import { NIVEIS } from '../labels'
-import RadioRow from '../components/RadioRow'
+import LevelSlider from '../components/LevelSlider'
 import FooterNav from '../components/FooterNav'
 
-/** Step 1 — student level (beginner, intermediate, advanced). */
+/** Step 1 — student level on a continuous scale (iniciante → intermédio → avançado). */
 export default function StepNivel({ state, set, onNext }) {
-  const canAdvance = !!state.nivelAluno
+  const canAdvance = state.nivelAluno != null
 
   return (
     <div className="step">
@@ -14,7 +13,7 @@ export default function StepNivel({ state, set, onNext }) {
         está o aluno?
       </div>
       <div className="subtitle">
-        Indica o nível do aluno para definir a faixa de dificuldade das obras
+        Arrasta para situar o aluno entre iniciante e avançado
       </div>
 
       <div className="field">
@@ -22,8 +21,7 @@ export default function StepNivel({ state, set, onNext }) {
           <span className="q">nível</span>
           <span className="section-label">obrigatório</span>
         </div>
-        <RadioRow
-          options={NIVEIS}
+        <LevelSlider
           value={state.nivelAluno}
           onChange={(v) => set({ nivelAluno: v })}
         />

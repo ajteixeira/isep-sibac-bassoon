@@ -22,7 +22,6 @@ import org.sibac.bassoon.model.EvidenceType;
 import org.sibac.bassoon.model.Hypothesis;
 import org.sibac.bassoon.model.Motivation;
 import org.sibac.bassoon.model.Skill;
-import org.sibac.bassoon.model.StudentLevel;
 import org.sibac.bassoon.model.Work;
 import org.sibac.bassoon.output.FiredRule;
 import org.sibac.bassoon.output.Recommendation;
@@ -63,7 +62,7 @@ public class RecommendationEngine {
    * with prerequisites applied.
    *
    * @param catalog work catalog
-   * @param level student level
+   * @param studentLevel continuous student level on the 1.5–5.5 axis
    * @param motivation student motivation (may be null)
    * @param skills list of (skill, cf) in priority order (1 to 3)
    * @param lastEra last studied era (may be null)
@@ -71,7 +70,7 @@ public class RecommendationEngine {
    */
   public List<Recommendation> run(
       List<Work> catalog,
-      StudentLevel level,
+      double studentLevel,
       Motivation motivation,
       List<SkillInput> skills,
       Era lastEra,
@@ -85,8 +84,9 @@ public class RecommendationEngine {
     Map<Double, Work> worksById = indexById(catalog);
 
     // --- fuzzy front-end ---
-    double fuzzyLevel = StudentLevelMapper.toStudentLevel(level, motivation);
-    LOG.debug("Fuzzy studentLevel = {} (level={}, motivation={})", fuzzyLevel, level, motivation);
+    double fuzzyLevel = StudentLevelMapper.toStudentLevel(studentLevel, motivation);
+    LOG.debug("Fuzzy studentLevel = {} (input={}, motivation={})", fuzzyLevel, studentLevel,
+        motivation);
 
     int inserted = 0;
     int filtered = 0;

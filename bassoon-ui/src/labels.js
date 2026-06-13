@@ -2,11 +2,20 @@
 // Labels - PT
 // ---------------------------------------------------------------------------
 
+// Anchor marks for the continuous level slider (1.5–5.5 axis).
 export const NIVEIS = [
-  { id: 'BEGINNER',    label: 'Iniciante' },
-  { id: 'INTERMEDIATE', label: 'Intermédio' },
-  { id: 'ADVANCED',    label: 'Avançado' },
+  { value: 1.5, label: 'Iniciante' },
+  { value: 3.5, label: 'Intermédio' },
+  { value: 5.5, label: 'Avançado' },
 ]
+
+// Maps a continuous level (1.5–5.5) to the nearest word label.
+export const nivelLabel = (v) => {
+  if (v == null) return '—'
+  if (v < 2.5) return 'Iniciante'
+  if (v < 4.5) return 'Intermédio'
+  return 'Avançado'
+}
 
 export const MOTIVACOES = [
   { id: 'LOW',     label: 'Baixa' },

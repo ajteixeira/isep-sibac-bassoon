@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.sibac.bassoon.model.Motivation;
-import org.sibac.bassoon.model.StudentLevel;
 
 class FuzzySuitabilityServiceTest {
 
@@ -20,7 +19,7 @@ class FuzzySuitabilityServiceTest {
 
   @Test
   void beginnerPrefersEasyWorks() {
-    double beginner = StudentLevelMapper.toStudentLevel(StudentLevel.BEGINNER, Motivation.NEUTRAL);
+    double beginner = 1.5; // start of the level axis
 
     double easy = service.suitability(beginner, 1);
     double medium = service.suitability(beginner, 3);
@@ -32,8 +31,7 @@ class FuzzySuitabilityServiceTest {
 
   @Test
   void intermediatePrefersMediumWorks() {
-    double intermediate =
-        StudentLevelMapper.toStudentLevel(StudentLevel.INTERMEDIATE, Motivation.NEUTRAL);
+    double intermediate = 3.5; // middle of the level axis
 
     double easy = service.suitability(intermediate, 1);
     double medium = service.suitability(intermediate, 3);
@@ -45,7 +43,7 @@ class FuzzySuitabilityServiceTest {
 
   @Test
   void advancedPrefersHardWorks() {
-    double advanced = StudentLevelMapper.toStudentLevel(StudentLevel.ADVANCED, Motivation.NEUTRAL);
+    double advanced = 5.5; // end of the level axis
 
     double easy = service.suitability(advanced, 1);
     double medium = service.suitability(advanced, 3);
@@ -57,12 +55,9 @@ class FuzzySuitabilityServiceTest {
 
   @Test
   void highMotivationMakesHarderWorksMoreSuitable() {
-    double neutral =
-        StudentLevelMapper.toStudentLevel(StudentLevel.INTERMEDIATE, Motivation.NEUTRAL);
-    double motivated =
-        StudentLevelMapper.toStudentLevel(StudentLevel.INTERMEDIATE, Motivation.HIGH);
+    double neutral = StudentLevelMapper.toStudentLevel(3.5, Motivation.NEUTRAL);
+    double motivated = StudentLevelMapper.toStudentLevel(3.5, Motivation.HIGH);
 
     assertTrue(service.suitability(motivated, 5) > service.suitability(neutral, 5));
   }
-
 }

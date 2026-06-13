@@ -14,7 +14,6 @@ import org.sibac.bassoon.model.Era;
 import org.sibac.bassoon.model.Motivation;
 import org.sibac.bassoon.model.Skill;
 import org.sibac.bassoon.model.SkillSuitability;
-import org.sibac.bassoon.model.StudentLevel;
 import org.sibac.bassoon.model.Work;
 import org.sibac.bassoon.output.Recommendation;
 
@@ -53,7 +52,7 @@ class RecommendationEngineTest {
     // Request TRILLS+LEGATO so every work has at least one VERY_SUITABLE skill and clears MIN.
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
-        StudentLevel.INTERMEDIATE, Motivation.NEUTRAL,
+        3.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9),
                 new RecommendationEngine.SkillInput(Skill.LEGATO, 0.9)),
         null, null);
@@ -67,7 +66,7 @@ class RecommendationEngineTest {
     // beginner (1.5): all dif 4 -> beginner+medium=low -> ~0.30 -> all filtered
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
-        StudentLevel.BEGINNER, Motivation.NEUTRAL,
+        1.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, null);
 
@@ -88,7 +87,7 @@ class RecommendationEngineTest {
 
     List<Recommendation> results = engine.run(
         List.of(ref, high),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, null);
 
@@ -105,7 +104,7 @@ class RecommendationEngineTest {
     // With the neutral CF seed it is dropped; the VERY_SUITABLE works survive.
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, null);
 
@@ -128,7 +127,7 @@ class RecommendationEngineTest {
 
     List<Recommendation> results = engine.run(
         List.of(baroque, romantic),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         Era.BAROQUE, null);
 
@@ -152,13 +151,13 @@ class RecommendationEngineTest {
     // With PIANO preference its score should be strictly higher.
     List<Recommendation> without = engine.run(
         TestWorks.catalog(),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.LEGATO, 0.9)),
         null, null);
 
     List<Recommendation> with = engine.run(
         TestWorks.catalog(),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.LEGATO, 0.9)),
         null, List.of(new RecommendationEngine.AccompanimentInput(Accompaniment.PIANO, 0.8)));
 
@@ -186,7 +185,7 @@ class RecommendationEngineTest {
 
     List<Recommendation> results = engine.run(
         List.of(prereq, dependent),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.LEGATO, 0.9)),
         null, null);
 
@@ -208,7 +207,7 @@ class RecommendationEngineTest {
 
     List<Recommendation> results = engine.run(
         List.of(prereq, dependent),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.LEGATO, 0.9)),
         null, null);
 
@@ -242,7 +241,7 @@ class RecommendationEngineTest {
 
     List<Recommendation> results = engine.run(
         List.of(a, b, c),
-        StudentLevel.ADVANCED, Motivation.NEUTRAL,
+        5.5, Motivation.NEUTRAL,
         List.of(new RecommendationEngine.SkillInput(Skill.LEGATO, 1.0)),
         null, null);
 
@@ -266,7 +265,7 @@ class RecommendationEngineTest {
     // HIGH motivation pushes fuzzy level up -> more works may pass
     List<Recommendation> results = engine.run(
         TestWorks.catalog(),
-        StudentLevel.INTERMEDIATE, Motivation.HIGH,
+        3.5, Motivation.HIGH,
         List.of(new RecommendationEngine.SkillInput(Skill.TRILLS, 0.9)),
         null, null);
 

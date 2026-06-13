@@ -536,6 +536,28 @@ button:disabled { cursor: not-allowed; }
   font-weight: 500;
 }
 
+/* ---- level slider (student level: iniciante / intermédio / avançado) ---- */
+.level-slider.untouched .cf-native::-webkit-slider-thumb { background: var(--ink-faint); }
+.level-slider.untouched .cf-native::-moz-range-thumb { background: var(--ink-faint); }
+.level-slider.untouched .cf-native::-webkit-slider-runnable-track {
+  background: var(--line-soft);
+}
+.level-slider.untouched .cf-native::-moz-range-progress { background: var(--line-soft); }
+
+.level-marks {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+}
+.level-mark { flex: 1; text-align: center; }
+.level-mark:first-child { text-align: left; }
+.level-mark:last-child { text-align: right; }
+.level-mark.active { color: var(--accent); font-weight: 600; }
+
 
 /* =========================================================================
    Direction Picker (3-button magnet bar)

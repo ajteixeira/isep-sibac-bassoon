@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { EPOCAS, ACOMPANHAMENTOS, COMP_BY_ID, NIVEIS, MOTIVACOES } from '../labels'
+import { EPOCAS, ACOMPANHAMENTOS, COMP_BY_ID, nivelLabel, MOTIVACOES } from '../labels'
 import FooterNav from '../components/FooterNav'
 
 const eraLabel = (id) => EPOCAS.find((e) => e.id === id)?.label ?? id
@@ -410,7 +410,7 @@ function InferencePanel({ firedRules, workName, initialScore, score, state }) {
     )
   }
 
-  const nivelLabel = NIVEIS.find((n) => n.id === state.nivelAluno)?.label || state.nivelAluno
+  const nivelTexto = nivelLabel(state.nivelAluno)
   const motivLabel = state.motivacao
     ? MOTIVACOES.find((m) => m.id === state.motivacao)?.label.toLowerCase()
     : 'neutra'
@@ -468,7 +468,7 @@ function InferencePanel({ firedRules, workName, initialScore, score, state }) {
           <div className="inf-cat-head">adequação difusa</div>
           <div className="inf-rule">
             <span className="inf-rule-subject">
-              nível {nivelLabel.toLowerCase()} &middot; motivação {motivLabel}
+              nível {nivelTexto.toLowerCase()} &middot; motivação {motivLabel}
             </span>
             <span className="inf-rule-desc" />
             <span className="inf-rule-cf pos">{initialScore.toFixed(2)}</span>

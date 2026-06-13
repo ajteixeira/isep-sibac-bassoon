@@ -39,7 +39,7 @@ class RecommendationControllerTest {
   void validRequestReturns200() throws Exception {
     String body = """
         {
-          "studentLevel": "INTERMEDIATE",
+          "studentLevel": 3.5,
           "motivation": "NEUTRAL",
           "skills": [{"skill": "LEGATO", "cf": 0.9}]
         }

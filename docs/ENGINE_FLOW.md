@@ -20,7 +20,7 @@ O formulário (React, 6 passos) submete um `POST /recommend` com este corpo:
 
 ```json
 {
-  "studentLevel": "INTERMEDIATE",
+  "studentLevel": 3.5,
   "motivation": "HIGH",
   "skills": [
     { "skill": "LEGATO", "cf": 0.9 },
@@ -42,29 +42,31 @@ O `RecommendationController` recebe este JSON e chama dois serviços:
 
 **Classe:** `org.sibac.bassoon.fuzzy.StudentLevelMapper`
 
-O professor escolhe o nível do aluno (3 opções: BEGINNER, INTERMEDIATE, ADVANCED)
-e a motivação (3 opções: LOW, NEUTRAL, HIGH). O `StudentLevelMapper` converte
-estas duas escolhas num único número, usando um ajuste simples:
+O professor situa o aluno num **slider contínuo** de nível (eixo 1.5–5.5, rotulado
+iniciante → intermédio → avançado — qualquer ponto intermédio é válido, ex. 4.3) e
+escolhe a motivação (LOW, NEUTRAL, HIGH). O `StudentLevelMapper` ajusta o valor do
+slider pela motivação:
 
 ```
-Nível base:
-  BEGINNER     → 1.5
-  INTERMEDIATE → 3.5
-  ADVANCED     → 5.5
+Slider de nível (contínuo):
+  1.5 = iniciante    3.5 = intermédio    5.5 = avançado
 
 Motivação (shift):
   HIGH   → +1.0
   LOW    → -1.0
   NEUTRAL → 0
 
-Resultado = base + shift, limitado a [0.5, 6.5]
+Resultado = nível + shift, limitado a [0.5, 6.5]
 ```
 
-Exemplo: `INTERMEDIATE` + `HIGH` = 3.5 + 1.0 = **4.5**.
+Exemplo: slider em 3.5 (intermédio) + `HIGH` = 3.5 + 1.0 = **4.5**.
 
-**Isto não é fuzzy.** É uma conversão determinística. O valor resultante
-(0.5..6.5) será uma das duas entradas do sistema fuzzy (a outra é a
-dificuldade da obra).
+> O intervalo do slider (1.5–5.5) com shift ±1.0 cai exatamente em [0.5, 6.5] — o eixo
+> do fuzzy. As margens [0.5, 1.5] e [5.5, 6.5] são precisamente o espaço reservado para
+> a motivação empurrar (ver §9.2).
+
+**O ajuste da motivação não é fuzzy.** É determinístico. O valor resultante (0.5..6.5)
+é uma das duas entradas do sistema fuzzy (a outra é a dificuldade da obra).
 
 ### 2.3 STEP 2 — A UNICA parte fuzzy do sistema
 
@@ -201,7 +203,7 @@ RULE 9: IF studentLevel IS advanced     AND workDifficulty IS hard   THEN suitab
 
 #### 2.3.6 Exemplo de cálculo
 
-Aluno `INTERMEDIATE` (3.5) + motivação `HIGH` (+1.0) = 4.5. Obra dif 5.
+Aluno em 3.5 (intermédio no slider) + motivação `HIGH` (+1.0) = 4.5. Obra dif 5.
 
 **Fuzzificação das entradas:**
 
@@ -503,8 +505,7 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 | `Work` | Obra do catálogo. Campos: id, name, composer, era, country, accompaniment, difficultyLevel, videoLink, prerequisiteId, `Map<Skill, SkillSuitability>` |
 | `Skill` | Enum com 24 competências, organizadas em 7 grupos (Articulação, Registo, Tempo, Controlo do som, Desafios técnicos, Ritmo, Carácter) |
 | `SkillSuitability` | Enum de adequação com 7 níveis: `REFERENCE`, `VERY_SUITABLE`, `SUITABLE`, `MODERATE`, `WEAK`, `UNSUITABLE`, `TOTALLY_UNSUITABLE` |
-| `StudentLevel` | `BEGINNER`, `INTERMEDIATE`, `ADVANCED` |
-| `Motivation` | `LOW`, `NEUTRAL`, `HIGH` |
+| `Motivation` | `LOW`, `NEUTRAL`, `HIGH`. O nível do aluno NÃO é um enum — é um `double` contínuo (1.5–5.5) vindo do slider |
 | `Era` | `BAROQUE`, `CLASSICAL`, `ROMANTIC`, `CONTEMPORARY`, `OTHER` |
 | `Accompaniment` | `SOLO`, `PIANO`, `BASSO_CONTINUO`, `ORCHESTRA` |
 | `DifficultyLevel` | `LEVEL_1` a `LEVEL_6` |
@@ -527,7 +528,7 @@ O método `clean()` remove frases proibidas que o LLM insiste em usar
 | Classe | Descrição |
 |---|---|
 | `FuzzySuitabilityService` | Carrega `suitability.fcl` via classpath. `suitability(studentLevel, workDifficulty)` devolve double [0..1]. `synchronized` porque o FIS tem estado interno |
-| `StudentLevelMapper` | `toStudentLevel(StudentLevel, Motivation)` → double. Conversão determinística |
+| `StudentLevelMapper` | `toStudentLevel(double level, Motivation)` → double. Ajusta o nível contínuo (1.5–5.5) pela motivação (±1.0) e faz clamp a [0.5, 6.5]. Determinístico |
 
 ### 3.4 `kb/` — Base de conhecimento
 
@@ -668,37 +669,28 @@ que a lógica difusa tem razão de existir.
 
 ### 9.2 "O input do professor sobre o nível do aluno não devia ser também fuzzy?"
 
-Esta é uma limitação real do sistema, e vale a pena reconhecê-la honestamente.
+O nível do aluno **é** uma entrada contínua. O professor situa-o num **slider** (eixo
+1.5–5.5, rotulado iniciante / intermédio / avançado), não em 3 categorias rígidas. Pode
+dizer "este aluno é um intermédio forte, quase avançado" pondo o cursor em ~4.3.
 
-**O que o sistema faz:** o professor escolhe `INTERMEDIATE` + `HIGH` → o `StudentLevelMapper`
-converte deterministicamente para **4.5** → esse número entra no sistema fuzzy.
-
-O 4.5 é um número **certo**, sem incerteza. Só depois é que o fuzzy o fuzzifica:
-intermediate=0.5, advanced=0.5.
-
-**Porque a tensão existe:** quando o professor diz "INTERMEDIATE", isso é em si um conceito
-vago — não há uma fronteira nítida entre intermédio e avançado. Uma abordagem mais "puramente
-fuzzy" deixaria o professor expressar graus de pertença directamente, por exemplo
-"intermédio a 0.7, avançado a 0.3". Isso não foi modelado.
-
-**Porque o design actual ainda funciona:**
-
-O `StudentLevelMapper` coloca o aluno num eixo contínuo (0.5–6.5), e o fuzzy já faz a
-transição gradual sobre esse valor:
+Esse valor contínuo entra diretamente no sistema fuzzy, que o fuzzifica em graus de
+pertença sobrepostos:
 
 ```
-INTERMEDIATE + LOW  → 2.5 → beginner=0.5, intermediate=0.5
-INTERMEDIATE        → 3.5 → intermediate=1.0
-INTERMEDIATE + HIGH → 4.5 → intermediate=0.5, advanced=0.5
+3.0 → intermediate=1.0
+4.5 → intermediate=0.5, advanced=0.5
+5.0 → intermediate≈0.25, advanced≈0.75
 ```
 
-A motivação serve exactamente para o professor expressar "este aluno está mais para o lado
-avançado do intermédio". O fuzzy absorve essa imprecisão no passo seguinte.
+A vaguidade ("entre intermédio e avançado") é capturada **na origem**, pelo slider, e
+modelada pelas funções de pertença. É exatamente isto que justifica usar lógica difusa
+aqui: a entrada é genuinamente contínua, não um conjunto de categorias que poderia ser
+uma tabela de lookup. A motivação (±1.0) é um ajuste adicional sobre esse valor.
 
-**O que não se modelou:** se o professor diz INTERMEDIATE mas *não tem a certeza* da categoria
-— se está genuinamente em dúvida entre intermédio e avançado — essa incerteza sobre a
-*escolha da categoria em si* não é capturada. Seria necessário um input de CF sobre o nível
-(como existe para as skills), o que aumentaria a complexidade da UI.
+**O que continua por modelar:** a incerteza do *próprio professor* sobre a sua avaliação
+(ex. "acho que é 4, mas não tenho a certeza") — seria um CF sobre o nível, como existe
+para as skills. Optou-se por não o fazer para não sobrecarregar a UI; o slider contínuo
+já captura a gradação que mais importa.
 
 ---
 
