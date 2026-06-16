@@ -14,7 +14,6 @@ final class PtLabels {
 
   private PtLabels() {}
 
-  /** Portuguese name of the skill (e.g. TRILLS → "Trilos"). */
   static String skill(Skill skill) {
     return switch (skill) {
       case LEGATO -> "Legato";
@@ -44,21 +43,19 @@ final class PtLabels {
     };
   }
 
-  /** Portuguese name of the era (e.g. BAROQUE → "Barroco"). */
   static String era(Era era) {
     if (era == null) {
       return "";
     }
     return switch (era) {
       case BAROQUE -> "Barroco";
-      case CLASSICAL -> "Classico";
-      case ROMANTIC -> "Romantico";
-      case CONTEMPORARY -> "Contemporaneo";
+      case CLASSICAL -> "Clássico";
+      case ROMANTIC -> "Romântico";
+      case CONTEMPORARY -> "Contemporâneo";
       case OTHER -> "Outro";
     };
   }
 
-  /** Portuguese name of the accompaniment type (e.g. BASSO_CONTINUO → "Baixo continuo"). */
   static String accompaniment(Accompaniment accompaniment) {
     if (accompaniment == null) {
       return "";
@@ -66,16 +63,15 @@ final class PtLabels {
     return switch (accompaniment) {
       case SOLO -> "Solo";
       case PIANO -> "Piano";
-      case BASSO_CONTINUO -> "Baixo continuo";
+      case BASSO_CONTINUO -> "Baixo contínuo";
       case ORCHESTRA -> "Orquestra";
     };
   }
 
-  /** Portuguese label for difficulty (e.g. 3 → "moderada"). */
   static String difficulty(int level) {
     return switch (level) {
-      case 1 -> "muito acessivel";
-      case 2 -> "acessivel";
+      case 1 -> "muito acessível";
+      case 2 -> "acessível";
       case 3 -> "moderada";
       case 4 -> "exigente";
       case 5 -> "muito exigente";

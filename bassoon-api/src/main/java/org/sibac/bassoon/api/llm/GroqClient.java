@@ -8,6 +8,8 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +39,6 @@ public class GroqClient {
 
   /**
    * Calls the Groq API and returns the response content as a String.
-   * The system instruction should mention "JSON" so the model returns valid JSON.
    */
   public String generateJson(String systemInstruction, String userPrompt) {
     return call(systemInstruction, userPrompt);

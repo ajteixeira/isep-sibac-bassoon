@@ -20,9 +20,6 @@ import org.springframework.stereotype.Service;
  *
  * <p>Builds one prompt with all recommended works and their facts, calls the LLM in JSON
  * mode, and writes each justification into {@link RecommendationResponse.RecommendedWork}.
- *
- * <p>A single call (rather than one per work) lets the model relate works to each other
- * (e.g. moving from basso continuo to orchestra) and is cheaper.
  */
 @Service
 public class JustificationService {
@@ -43,26 +40,29 @@ public class JustificationService {
 
   private static final String SYSTEM_INSTRUCTION =
       """
-      Es um professor de fagote. Para cada obra, recebes o que o professor
-      pediu e o que a obra oferece. Escreve um paragrafo natural — como se
-      falasses com um colega, nao como um robo a listar factos.
+      És um professor de fagote. Para cada obra, recebes o que o professor
+      pediu e o que a obra oferece. Escreve um parágrafo natural — como se
+      falasses com um colega, não como um robot a listar factos.
 
-      Cobre todos os pontos recebidos: skills, acompanhamento, epoca,
-      pre-requisitos. Mostra o balanco entre pontos fortes e fracos.
+      Cobre todos os pontos recebidos: skills, acompanhamento, época,
+      pré-requisitos. Mostra o balanço entre pontos fortes e fracos.
 
-      NAO inventes. NAO uses frases feitas ("e uma obra que", "permite
-      desenvolver", "ajuda a"). NAO uses adjetivos vagos.
-      Portugues europeu, COM ACENTOS. Escreve "não", nunca "nao".
+      NÃO inventes informações, baseia-te apenas nos factos.
+      NÃO uses adjetivos vagos.
+      Escreve em português europeu, COM ACENTOS. Escreve "não", nunca "nao".
 
       Exemplo:
-        Factos: Dificuldade muito acessivel. Ponto forte: Staccato. Trabalha Legato mas
-        ha melhores. Desaconselhada para Flicking. Acompanhamento Baixo
-        continuo (preferido). ATENCAO: Barroco — perdeu prioridade.
-      Resposta:
-        "O Telemann e acessivel e destaca-se pelo staccato. O baixo continuo"
-        + "alinha com a preferencia do professor, embora o legato tenha"
-        + "melhores alternativas e o flicking seja desaconselhado. A epoca"
-        + "barroca repete a ultima estudada, o que lhe tira alguma prioridade."
+        Factos:
+          Dificuldade muito acessível.
+          Excelente para Staccato (obra de referência).
+          Razoável para Legato.
+          Pouco adequada para Flicking.
+          Acompanhamento Baixo contínuo (preferido pelo professor).
+          ATENÇÃO: Barroco — mesma época da última obra. Perdeu prioridade.
+        Resposta: Obra acessível. O ponto forte é o staccato, e tem o acompanhamento
+        de baixo contínuo, tal como pedido. Para o legato é razoável, mas há outras obras melhores;
+        no entanto, para trabalhar o flicking não é adequada. Sendo do período barroco, está a repetir
+        a época da última obra estudada, o que torna a obra menos interessante.
 
       Responde APENAS com JSON:
       {"justificacoes": [{"obra": <numero>, "texto": "<justificacao>"}]}
@@ -83,7 +83,7 @@ public class JustificationService {
     for (int i = 0; i < works.size(); i++) {
       String text = byNumber.get(i + 1);
       works.get(i).setJustification(
-          text != null && !text.isBlank() ? clean(text) : fallback()
+          text != null && !text.isBlank() ? text.trim() : fallback()
       );
     }
 
@@ -94,7 +94,7 @@ public class JustificationService {
       List<RecommendationResponse.RecommendedWork> works, RecommendationRequest request) {
 
     StringBuilder sb = new StringBuilder();
-    sb.append("Recomendei estas obras para um aluno de fagote. Preciso de uma justificacao\n");
+    sb.append("Recomendei estas obras para um aluno de fagote. Preciso de uma justificação\n");
     sb.append("curta para cada uma. Tom direto, natural. NADA de frases feitas.\n\n");
 
     for (int i = 0; i < works.size(); i++) {
@@ -134,13 +134,13 @@ public class JustificationService {
       for (var s : request.getSkills()) {
         String label = PtLabels.skill(s.getSkill());
         switch (work.getSkillSuitability(s.getSkill())) {
-          case REFERENCE -> facts.add("Excelente para " + label + " (obra de referencia).");
-          case VERY_SUITABLE -> facts.add("Muito boa para " + label + ".");
-          case SUITABLE -> facts.add("Boa para " + label + ".");
-          case MODERATE -> facts.add("Razoavel para " + label + ".");
+          case REFERENCE -> facts.add("Excelente para " + label + " (obra de referência).");
+          case VERY_SUITABLE -> facts.add("Muito adequada para " + label + ".");
+          case SUITABLE -> facts.add("Adequada para " + label + ".");
+          case MODERATE -> facts.add("Razoável para " + label + ".");
           case WEAK -> facts.add("Fraca para " + label + ".");
-          case UNSUITABLE -> facts.add("Ma para " + label + ".");
-          case TOTALLY_UNSUITABLE -> facts.add("Pessima para " + label + ".");
+          case UNSUITABLE -> facts.add("Pouco adequada para " + label + ".");
+          case TOTALLY_UNSUITABLE -> facts.add("Muito desadequada para " + label + ".");
         }
       }
     }
@@ -162,11 +162,11 @@ public class JustificationService {
 
     if (request.getLastEra() != null) {
       if (request.getLastEra() == work.getEra()) {
-        facts.add("ATENCAO: " + PtLabels.era(work.getEra())
-            + " — mesma epoca da ultima obra. Perdeu prioridade.");
+        facts.add("ATENÇÃO: " + PtLabels.era(work.getEra())
+            + " — mesma época da última obra. Perdeu prioridade.");
       } else {
-        facts.add("Epoca " + PtLabels.era(work.getEra())
-            + " — diferente da ultima estudada. Favorece variedade.");
+        facts.add("Época " + PtLabels.era(work.getEra())
+            + " — diferente da última estudada. Favorece variedade.");
       }
     }
 
@@ -174,7 +174,7 @@ public class JustificationService {
       Work prereq = catalog.byId(work.getPrerequisiteId());
       if (prereq != null) {
         facts.add("Estudar \"" + prereq.getName() + "\" (" + prereq.getComposer()
-            + ") antes pode ser uma boa preparacao para esta obra.");
+            + ") antes pode ser uma boa preparação para esta obra.");
       }
     }
 
@@ -182,7 +182,7 @@ public class JustificationService {
       if (other == w) continue;
       Work otherWork = catalog.byId(other.getWorkId());
       if (otherWork != null && otherWork.getPrerequisiteId() == work.getId()) {
-        facts.add("Boa preparacao para \"" + otherWork.getName() + "\" ("
+        facts.add("Boa preparação para \"" + otherWork.getName() + "\" ("
             + otherWork.getComposer() + ") — por isso aparece primeiro.");
       }
     }
@@ -210,31 +210,7 @@ public class JustificationService {
     return result;
   }
 
-  private static String clean(String text) {
-    text = text
-        .replace("e uma obra que ", "")
-        .replace("permite desenvolver ", "trabalha ")
-        .replace("ajuda a ", "")
-        .replace("fornece ", "oferece ")
-        .replace("constitui ", "")
-        .replace("alem disso, ", "")
-        .replace("no entanto, ", "")
-        .replace("por outro lado, ", "")
-        .replace("  ", " ");
-    text = text.replaceAll("(?i)convem estudar com um professor[^.]*\\.?\\s*", "");
-    text = text.replaceAll("(?i)estudar com um professor[^.]*\\.?\\s*", "");
-    text = text.replaceAll("(?i)para aproveitar ao maximo[^.]*\\.?\\s*", "");
-    text = text.replaceAll("(?i)sem duvida[^.]*\\.?\\s*", "");
-    text = text.replaceAll("(?i)certamente[^.]*\\.?\\s*", "");
-    text = text.replaceAll("(?i)com certeza[^.]*\\.?\\s*", "");
-    text = text.replace("acao", "ação").replace("cao ", "ção ")
-        .replace("Nao ", "Não ").replace("nao ", "não ")
-        .replace(" so ", " só ").replace(" So ", " Só ")
-        .replace("epoca", "época").replace("Epoca", "Época");
-    return text.trim();
-  }
-
   private String fallback() {
-    return "Obra recomendada pelo sistema. A justificacao automatica nao esta disponivel de momento.";
+    return "Obra recomendada pelo sistema. A justificação automática não está disponível de momento.";
   }
 }

@@ -6,9 +6,7 @@ import java.util.List;
  * A recommended work produced by the engine.
  *
  * <p>Built from {@code Hypothesis} candidacies after {@code fireAllRules()},
- * with combined CFs and the rules that fired. The pedagogical justification is
- * NOT part of this object — it is generated later by the LLM and lives on the
- * API response DTO ({@code RecommendedWork}).
+ * with combined CFs and the rules that fired.
  */
 public class Recommendation {
 

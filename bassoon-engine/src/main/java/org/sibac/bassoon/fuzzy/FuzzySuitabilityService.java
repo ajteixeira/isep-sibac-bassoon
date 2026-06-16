@@ -42,7 +42,8 @@ public class FuzzySuitabilityService {
   /**
    * Returns the suitability [0..1] of a work for a student.
    *
-   * @param studentLevel student level on the 1..6 axis (see {@link StudentLevelMapper})
+   * @param studentLevel motivation-adjusted student level on the 0.5..6.5 axis
+   *     (output of {@link StudentLevelMapper#toStudentLevel})
    * @param workDifficulty work difficulty (1..6)
    */
   public synchronized double suitability(double studentLevel, int workDifficulty) {

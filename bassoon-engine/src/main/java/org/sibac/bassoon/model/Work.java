@@ -79,12 +79,10 @@ public class Work {
     return prerequisiteId;
   }
 
-  // returns the skill suitability for a given skill; MEDIUM if not defined
   public SkillSuitability getSkillSuitability(Skill skill) {
     return skills.getOrDefault(skill, SkillSuitability.MODERATE);
   }
 
-  // Drools-friendly overload: accepts Object (avoids casts in DRL constraints)
   public SkillSuitability skillSuitabilityFor(Object skill) {
     return getSkillSuitability((Skill) skill);
   }

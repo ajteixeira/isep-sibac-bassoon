@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 /**
  * Runs the inference engine and enriches results with catalog metadata.
  *
- * <p>Converts the DTO into engine inputs, runs the pipeline (fuzzy + Drools + ordering +
- * prerequisites), and wraps each raw {@link Recommendation} with composer, era, video link,
+ * <p>Converts the DTO into engine inputs, runs the pipeline,
+ * and wraps each raw {@link Recommendation} with composer, era, video link,
  * etc. from the catalog.
  */
 @Service

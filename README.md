@@ -41,16 +41,17 @@ echo "GROQ_API_KEY=YOUR_KEY_HERE" > .env
 
 ### 2. jFuzzyLogic JAR
 
-The fuzzy logic library (v3.3) is **not on Maven Central**. Download the JAR from
-[jfuzzylogic.sourceforge.net](http://jfuzzylogic.sourceforge.net/), place it in
-`bassoon/lib/jFuzzyLogic.jar`, then install it once:
+The fuzzy logic library (v3.3) is **not on Maven Central**, so it must be installed
+into your local Maven repository once:
 
 ```bash
 mvn install:install-file -Dfile=lib/jFuzzyLogic.jar -DgroupId=net.sourceforge.jFuzzyLogic -DartifactId=jFuzzyLogic -Dversion=3.3 -Dpackaging=jar
 ```
 
-> The `lib/` folder is gitignored. For Docker builds the jar is copied into the container
-> and installed automatically.
+The jar ships in `lib/jFuzzyLogic.jar`. If it's missing, download it from
+[jfuzzylogic.sourceforge.net](http://jfuzzylogic.sourceforge.net/) into `lib/` first.
+
+> For Docker builds the jar is copied into the container and installed automatically.
 
 ### 3. Node dependencies
 
@@ -99,7 +100,7 @@ Stop: `docker compose down`
 ### View fuzzy function charts
 
 ```bash
-mvn exec:java -pl bassoon-engine -Dexec.mainClass="org.sibac.bassoon.fuzzy.FuzzyChartGenerator"
+mvn exec:java -pl bassoon-engine "-Dexec.mainClass=org.sibac.bassoon.fuzzy.FuzzyChartGenerator"
 ```
 
 Opens JFuzzyChart windows showing the membership functions of `suitability.fcl`

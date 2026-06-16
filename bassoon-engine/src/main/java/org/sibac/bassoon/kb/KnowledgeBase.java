@@ -9,8 +9,8 @@ import org.sibac.bassoon.model.*;
 /**
  * Bassoon repertoire knowledge base.
  *
- * <p>Populated from {@code obras_fagote_v5.xlsx} (31 works, 7-level scale),
- * validated against domain expert interviews (Prof. Carolino Carreira).
+ * <p>Curated bassoon repertoire: 31 works on a 7-level scale, validated against
+ * domain expert interviews (Prof. Carolino Carreira).
  */
 public final class KnowledgeBase {
 

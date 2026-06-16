@@ -26,12 +26,10 @@ public class WorkCatalog {
     this.byId = works.stream().collect(Collectors.toMap(Work::getId, w -> w));
   }
 
-  /** All works in the catalog. */
   public List<Work> all() {
     return works;
   }
 
-  /** The work with this id, or null. */
   public Work byId(double id) {
     return byId.get(id);
   }

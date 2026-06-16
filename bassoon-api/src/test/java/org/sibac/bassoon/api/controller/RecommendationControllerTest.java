@@ -1,6 +1,9 @@
 package org.sibac.bassoon.api.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -15,8 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * Integration tests for POST /recommend.
  *
- * <p>JustificationService is mocked so the tests never call the real Groq API
- * (no network, no key needed) — they exercise the controller + validation + engine only.
+ * <p>JustificationService is mocked so the tests never call the Groq API
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -25,7 +27,6 @@ class RecommendationControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
-  // mocked: avoids a real Groq call; fillJustifications becomes a no-op
   @MockBean
   private JustificationService justificationService;
 
@@ -41,8 +42,7 @@ class RecommendationControllerTest {
   }
 
   @Test
-  void outOfRangeStudentLevelReturns400() throws Exception {
-    // studentLevel must be within [1.5, 5.5] (@DecimalMin/@DecimalMax on the DTO)
+  void aboveRangeStudentLevelReturns400() throws Exception {
     String body = """
         {
           "studentLevel": 9.0,
@@ -57,7 +57,38 @@ class RecommendationControllerTest {
   }
 
   @Test
-  void validRequestReturns200() throws Exception {
+  void belowRangeStudentLevelReturns400() throws Exception {
+    // below the @DecimalMin("1.5") lower bound
+    String body = """
+        {
+          "studentLevel": 1.0,
+          "motivation": "NEUTRAL",
+          "skills": [{"skill": "LEGATO", "cf": 0.9}]
+        }
+        """;
+    mockMvc.perform(post("/recommend")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void invalidMotivationReturns400() throws Exception {
+    String body = """
+        {
+          "studentLevel": 3.5,
+          "motivation": "XPTO",
+          "skills": [{"skill": "LEGATO", "cf": 0.9}]
+        }
+        """;
+    mockMvc.perform(post("/recommend")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(body))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void validRequestReturnsRankedRecommendations() throws Exception {
     String body = """
         {
           "studentLevel": 3.5,
@@ -68,6 +99,12 @@ class RecommendationControllerTest {
     mockMvc.perform(post("/recommend")
             .contentType(MediaType.APPLICATION_JSON)
             .content(body))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.recommendations").isArray())
+        .andExpect(jsonPath("$.recommendations").isNotEmpty())
+        .andExpect(jsonPath("$.recommendations[0].workName").exists())
+        .andExpect(jsonPath("$.recommendations[0].score").isNumber());
+
+    verify(justificationService).fillJustifications(any(), any());
   }
 }

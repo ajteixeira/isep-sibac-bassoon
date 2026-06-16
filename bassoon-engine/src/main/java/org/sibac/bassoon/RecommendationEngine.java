@@ -63,10 +63,10 @@ public class RecommendationEngine {
    *
    * @param catalog work catalog
    * @param studentLevel continuous student level on the 1.5–5.5 axis
-   * @param motivation student motivation (may be null)
+   * @param motivation student motivation
    * @param skills list of (skill, cf) in priority order (1 to 3)
    * @param lastEra last studied era (may be null)
-   * @param accompaniments preferred accompaniments (may be null or empty)
+   * @param accompaniments preferred accompaniments (may be null)
    */
   public List<Recommendation> run(
       List<Work> catalog,

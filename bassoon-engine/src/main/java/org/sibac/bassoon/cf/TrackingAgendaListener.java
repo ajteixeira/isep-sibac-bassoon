@@ -19,7 +19,7 @@ import org.sibac.bassoon.model.CfFact;
 import org.sibac.bassoon.model.Hypothesis;
 
 /**
- * Certainty factor engine — intercepts rule firings to propagate CFs.
+ * Certainty factor engine - intercepts rule firings to propagate CFs.
  *
  * <p>Before each rule's RHS runs, the current LHS facts, rule CF ({@code @CF}), and
  * rule name are captured. The RHS calls {@code Hypothesis.update()}, which queries
@@ -28,7 +28,7 @@ import org.sibac.bassoon.model.Hypothesis;
  * <p>Facts without a CF (e.g. {@code Work}) are skipped when computing the minimum.
  *
  * <p>State is static (single-request safe). The API creates a fresh {@code KieSession}
- * per request and calls {@code dispose()} afterwards.
+ * per request and calls {@code dispose()} afterward.
  */
 public class TrackingAgendaListener implements AgendaEventListener {
 

@@ -1,6 +1,7 @@
 package org.sibac.bassoon.api.controller;
 
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.sibac.bassoon.api.dto.RecommendationRequest;
 import org.sibac.bassoon.api.dto.RecommendationResponse;
 import org.sibac.bassoon.api.service.DroolsService;
@@ -16,16 +17,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/recommend")
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
+@AllArgsConstructor
 public class RecommendationController {
 
   private final DroolsService droolsService;
   private final JustificationService justificationService;
-
-  public RecommendationController(
-      DroolsService droolsService, JustificationService justificationService) {
-    this.droolsService = droolsService;
-    this.justificationService = justificationService;
-  }
 
   @PostMapping
   public RecommendationResponse recommend(@Valid @RequestBody RecommendationRequest request) {
